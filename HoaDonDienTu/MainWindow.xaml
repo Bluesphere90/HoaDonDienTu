@@ -68,10 +68,18 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Ô nhập mã captcha -->
-                <TextBox x:Name="txtCaptcha" Grid.Row="0" Height="30" Padding="5" 
-                         FontSize="14" VerticalContentAlignment="Center"
-                         HorizontalAlignment="Stretch"/>
+                <!-- Ô nhập mã captcha with refresh button -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="txtCaptcha" Grid.Column="0" Height="30" Padding="5" 
+                             FontSize="14" VerticalContentAlignment="Center"
+                             HorizontalAlignment="Stretch"/>
+                    <Button x:Name="btnRefreshCaptcha" Grid.Column="1" Content="🔄" Width="30" Height="30" 
+                            Margin="5,0,0,0" Click="btnRefreshCaptcha_Click" ToolTip="Làm mới Captcha"/>
+                </Grid>
 
                 <!-- Hiển thị captcha lớn hơn -->
                 <Border x:Name="captchaContainer" Grid.Row="2" Height="100" 

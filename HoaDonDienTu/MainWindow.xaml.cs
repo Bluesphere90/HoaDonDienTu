@@ -73,12 +73,47 @@ namespace HoaDonDienTu
                     // Chuyển sang cửa sổ quản lý hóa đơn sau 1 giây
                     await Task.Delay(1000);
 
-                    // Mở cửa sổ quản lý hóa đơn
-                    InvoiceWindow invoiceWindow = new InvoiceWindow();
-                    invoiceWindow.Show();
+                    if (success)
+                    {
+                        lblThanhCong.Visibility = Visibility.Visible;
+                        lblThatBai.Visibility = Visibility.Collapsed;
 
-                    // Đóng cửa sổ đăng nhập
-                    this.Close();
+                        // Lưu thông tin đăng nhập
+                        SaveUserCredentials(txtUsername.Text, password, lblTenDV.Text);
+
+                        // Chuyển sang cửa sổ quản lý hóa đơn sau 1 giây
+                        await Task.Delay(1000);
+
+                        try
+                        {
+                            // Kiểm tra xem token có giá trị không
+                            if (string.IsNullOrEmpty(App.AuthToken))
+                            {
+                                MessageBox.Show("Token xác thực không hợp lệ", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
+
+                            Debug.WriteLine("Đang mở cửa sổ InvoiceWindow");
+                            // Mở cửa sổ quản lý hóa đơn
+                            InvoiceWindow invoiceWindow = new InvoiceWindow();
+                            Debug.WriteLine("Đã khởi tạo InvoiceWindow thành công");
+                            invoiceWindow.Show();
+                            Debug.WriteLine("Đã hiển thị InvoiceWindow");
+
+                            // Đóng cửa sổ đăng nhập
+                            this.Close();
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Lỗi khi mở InvoiceWindow: {ex.Message}");
+                            if (ex.InnerException != null)
+                            {
+                                Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                            }
+                            Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+                            MessageBox.Show($"Lỗi khi mở cửa sổ hóa đơn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
                 }
                 else
                 {
@@ -118,6 +153,34 @@ namespace HoaDonDienTu
                 txtPassword.Visibility = Visibility.Visible;
                 txtPasswordVisible.Visibility = Visibility.Collapsed;
                 btnShowPassword.Content = "👁️";
+            }
+        }
+
+        private void btnRefreshCaptcha_Click(object sender, RoutedEventArgs e)
+        {
+            // Set cursor to wait while fetching new captcha
+            Cursor = Cursors.Wait;
+
+            // Clear the current captcha text
+            txtCaptcha.Text = string.Empty;
+
+            try
+            {
+                // Get a new captcha
+                GetCaptcha();
+
+                // Set focus to the captcha input field
+                txtCaptcha.Focus();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi làm mới captcha: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                Debug.WriteLine($"Lỗi khi làm mới captcha: {ex.Message}");
+            }
+            finally
+            {
+                // Reset cursor back to default
+                Cursor = Cursors.Arrow;
             }
         }
 
@@ -354,6 +417,7 @@ namespace HoaDonDienTu
 
                 // Chuyển đổi thành JSON
                 string jsonData = JsonConvert.SerializeObject(loginData);
+                Debug.WriteLine($"Dữ liệu đăng nhập: {jsonData}");
 
                 // Tạo HttpContent
                 var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
@@ -361,19 +425,31 @@ namespace HoaDonDienTu
                 // Gửi request
                 var response = await client.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"Kết quả đăng nhập: {responseContent}");
 
                 // Phân tích kết quả
                 var result = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
-                if (response.IsSuccessStatusCode && result != null && result.token != null)
+                if (response.IsSuccessStatusCode && result != null)
                 {
-                    // Lưu token authentication
-                    App.AuthToken = result.token.ToString();
+                    // Kiểm tra xem token có tồn tại không
+                    if (result.token != null)
+                    {
+                        // Lưu token authentication
+                        App.AuthToken = result.token.ToString();
+                        Debug.WriteLine($"Token lưu thành công: {App.AuthToken.Substring(0, Math.Min(App.AuthToken.Length, 10))}...");
 
-                    // Lấy tên đơn vị
-                    await GetCompanyName();
+                        // Lấy tên đơn vị
+                        await GetCompanyName();
 
-                    return true;
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Token không tồn tại trong kết quả");
+                        MessageBox.Show("Đăng nhập thành công nhưng không nhận được token", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return false;
+                    }
                 }
                 else
                 {
@@ -387,6 +463,11 @@ namespace HoaDonDienTu
             catch (Exception ex)
             {
                 Debug.WriteLine($"Lỗi đăng nhập: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
                 MessageBox.Show($"Lỗi khi đăng nhập: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
