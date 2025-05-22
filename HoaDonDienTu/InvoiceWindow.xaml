@@ -9,25 +9,64 @@
         WindowStartupLocation="CenterScreen"
         Background="#F0F0F0">
 
-    <!-- Thêm Resources nếu bạn muốn dùng Converter thay vì thuộc tính Formatted trong Model -->
     <Window.Resources>
-        <!--<local:CurrencyFormatConverter x:Key="CurrencyFormatConverter"/>-->
-        <!--<local:DecimalFormatConverter x:Key="DecimalFormatConverter"/> // Nếu bạn có converter cho số lượng, tỷ giá-->
         <Style x:Key="RightAlignStyle" TargetType="TextBlock">
             <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
+        <!-- Định nghĩa Style chung cho các nút Tải và Xuất -->
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#4CAF50"/>
+            <!-- Màu xanh lá cây -->
+            <Setter Property="Margin" Value="5,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#45a049"/>
+                                <!-- Màu đậm hơn khi hover -->
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#3e8e41"/>
+                                <!-- Màu đậm hơn khi nhấn -->
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="LightGray"/>
+                                <Setter Property="Foreground" Value="DarkGray"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>
+            <!-- Header -->
             <RowDefinition Height="Auto"/>
+            <!-- Filter Panel -->
             <RowDefinition Height="*"/>
+            <!-- Data Display Area -->
             <RowDefinition Height="30"/>
+            <!-- Status Bar -->
         </Grid.RowDefinitions>
 
         <!-- Header -->
         <Border Grid.Row="0" Background="#2196F3">
+            <!-- ... (Nội dung Header giữ nguyên) ... -->
             <Grid>
                 <TextBlock Text="QUẢN LÝ HÓA ĐƠN ĐIỆN TỬ" 
                            FontSize="24" FontWeight="Bold" Foreground="White"
@@ -44,12 +83,18 @@
             <Grid Margin="10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <!-- Row 0: Type & Date -->
                     <RowDefinition Height="Auto"/>
+                    <!-- Row 1: Status Filters -->
                     <RowDefinition Height="Auto"/>
+                    <!-- Row 2: Options (XML Folder) -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Row 3: Action Buttons (Tải, Xuất) - HÀNG MỚI -->
                 </Grid.RowDefinitions>
 
-                <!-- Row 1: Type Selection and Date Range -->
+                <!-- Row 0: Type Selection and Date Range -->
                 <Grid Grid.Row="0">
+                    <!-- ... (Nội dung Row 0 giữ nguyên) ... -->
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
@@ -80,8 +125,9 @@
                     </Grid>
                 </Grid>
 
-                <!-- Row 2: Status Filters and Options -->
+                <!-- Row 1: Status Filters and Options -->
                 <Grid Grid.Row="1" Margin="0,15,0,0">
+                    <!-- ... (Nội dung Row 1 giữ nguyên) ... -->
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="200"/>
@@ -96,12 +142,13 @@
                     <ComboBox x:Name="cboKQKT" Grid.Column="4" Height="25" SelectionChanged="cboKQKT_SelectionChanged"/>
                 </Grid>
 
-                <!-- Row 3: Options and Buttons -->
+                <!-- Row 2: Options and XML Folder -->
                 <Grid Grid.Row="2" Margin="0,15,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
+                        <!--<ColumnDefinition Width="Auto"/>-->
+                        <!-- Bỏ cột này vì nút Tải Hóa Đơn đã dời xuống -->
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <CheckBox x:Name="chkTH" Content="Tổng hợp" Margin="0,0,15,0" IsChecked="True" ToolTip="Tải danh sách hóa đơn tổng hợp"/>
@@ -117,16 +164,35 @@
                         <Button x:Name="btnChonFolder" Grid.Column="1" Content="..." Width="30" Height="25" 
                                 Margin="5,0,0,0" IsEnabled="False" Click="btnChonFolder_Click"/>
                     </Grid>
-                    <Button x:Name="btnTaiHoaDon" Grid.Column="2" Content="TẢI HÓA ĐƠN" Width="120" Height="35"
-                            Background="#4CAF50" Foreground="White" FontWeight="Bold"
-                            Click="btnTaiHoaDon_Click"/>
+                    <!-- Nút Tải Hóa Đơn đã được dời xuống Row 3 -->
                 </Grid>
+
+                <!-- Row 3: Action Buttons -->
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+                    <Button x:Name="btnTaiHoaDon" Content="TẢI HÓA ĐƠN" 
+                            Style="{StaticResource ActionButtonStyle}"
+                            Click="btnTaiHoaDon_Click"/>
+
+                    <Button x:Name="btnOpenExportMenu" Content="XUẤT DỮ LIỆU" 
+                            Style="{StaticResource ActionButtonStyle}"
+                            Click="btnOpenExportMenu_Click">
+                        <Button.ContextMenu>
+                            <ContextMenu x:Name="cmExportOptions">
+                                <MenuItem Header="Xuất CSV" Click="mnuExportCSV_Click"/>
+                                <MenuItem Header="Xuất Excel" Click="mnuExportExcel_Click"/>
+                                <!-- Bạn có thể thêm các tùy chọn xuất khác ở đây nếu cần -->
+                                <!-- <MenuItem Header="Xuất XML (Tùy chỉnh)" Click="mnuExportCustomXML_Click"/> -->
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- Data Display Area -->
-        <TabControl Grid.Row="2" Margin="10,5,10,10">
-            <TabItem Header="Tổng Hợp">
+        <TabControl x:Name="MainTabControl" Grid.Row="2" Margin="10,5,10,10">
+            <TabItem x:Name="tabTongHop" Header="Tổng Hợp">
+                <!-- ... (Nội dung dgTongHop giữ nguyên) ... -->
                 <DataGrid x:Name="dgTongHop" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                           AlternatingRowBackground="LightBlue" RowHeaderWidth="0">
                     <DataGrid.Columns>
@@ -141,7 +207,8 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="Chi Tiết">
+            <TabItem x:Name="tabChiTiet" Header="Chi Tiết">
+                <!-- ... (Nội dung dgChiTiet giữ nguyên) ... -->
                 <DataGrid x:Name="dgChiTiet" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                           FrozenColumnCount="7" AlternatingRowBackground="LightYellow" RowHeaderWidth="0">
                     <DataGrid.Columns>
@@ -187,7 +254,8 @@
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="XML/HTML Đã Tải">
+            <TabItem x:Name="tabXmlHtml" Header="XML/HTML Đã Tải">
+                <!-- ... (Nội dung lvXMLFiles giữ nguyên) ... -->
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -229,6 +297,7 @@
 
         <!-- Status Bar -->
         <StatusBar Grid.Row="3" Background="#EEEEEE">
+            <!-- ... (Nội dung StatusBar giữ nguyên) ... -->
             <StatusBarItem>
                 <TextBlock x:Name="lblStatus" Text="Sẵn sàng"/>
             </StatusBarItem>
