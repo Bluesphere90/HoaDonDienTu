@@ -12,6 +12,7 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using System.Net;
 using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace HoaDonDienTu
 {
@@ -73,35 +74,45 @@ namespace HoaDonDienTu
                     // Chuyển sang cửa sổ quản lý hóa đơn sau 1 giây
                     await Task.Delay(1000);
 
-                    if (success)
+                    try
                     {
-                        lblThanhCong.Visibility = Visibility.Visible;
-                        lblThatBai.Visibility = Visibility.Collapsed;
+                        // Kiểm tra xem token có giá trị không
+                        if (string.IsNullOrEmpty(App.AuthToken))
+                        {
+                            MessageBox.Show("Token xác thực không hợp lệ", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
 
-                        // Lưu thông tin đăng nhập
-                        SaveUserCredentials(txtUsername.Text, password, lblTenDV.Text);
-
-                        // Chuyển sang cửa sổ quản lý hóa đơn sau 1 giây
-                        await Task.Delay(1000);
+                        // Hiển thị thông tin trước khi mở cửa sổ mới
+                        Debug.WriteLine($"Đang mở cửa sổ InvoiceWindow với Token: {App.AuthToken.Substring(0, Math.Min(App.AuthToken.Length, 20))}...");
 
                         try
                         {
-                            // Kiểm tra xem token có giá trị không
-                            if (string.IsNullOrEmpty(App.AuthToken))
-                            {
-                                MessageBox.Show("Token xác thực không hợp lệ", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                                return;
-                            }
-
-                            Debug.WriteLine("Đang mở cửa sổ InvoiceWindow");
-                            // Mở cửa sổ quản lý hóa đơn
                             InvoiceWindow invoiceWindow = new InvoiceWindow();
                             Debug.WriteLine("Đã khởi tạo InvoiceWindow thành công");
+
+                            // Hiển thị cửa sổ
                             invoiceWindow.Show();
                             Debug.WriteLine("Đã hiển thị InvoiceWindow");
 
                             // Đóng cửa sổ đăng nhập
                             this.Close();
+                        }
+                        catch (TypeInitializationException typeEx)
+                        {
+                            Debug.WriteLine($"Lỗi khởi tạo loại: {typeEx.Message}");
+                            if (typeEx.InnerException != null)
+                            {
+                                Debug.WriteLine($"Inner Exception: {typeEx.InnerException.Message}");
+                            }
+                            MessageBox.Show($"Không thể khởi tạo cửa sổ hóa đơn: {typeEx.Message}\n{typeEx.InnerException?.Message}",
+                                           "Lỗi khởi tạo", MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                        catch (System.IO.FileNotFoundException fileEx)
+                        {
+                            Debug.WriteLine($"Thiếu tệp: {fileEx.Message}, FileName: {fileEx.FileName}");
+                            MessageBox.Show($"Thiếu tệp cần thiết để mở cửa sổ hóa đơn: {fileEx.FileName}",
+                                           "Lỗi tệp tin", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                         catch (Exception ex)
                         {
@@ -113,6 +124,11 @@ namespace HoaDonDienTu
                             Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
                             MessageBox.Show($"Lỗi khi mở cửa sổ hóa đơn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Lỗi ngoài khi mở InvoiceWindow: {ex.Message}");
+                        MessageBox.Show($"Lỗi khi chuyển đến cửa sổ hóa đơn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
                 else
@@ -435,9 +451,15 @@ namespace HoaDonDienTu
                     // Kiểm tra xem token có tồn tại không
                     if (result.token != null)
                     {
-                        // Lưu token authentication
-                        App.AuthToken = result.token.ToString();
-                        Debug.WriteLine($"Token lưu thành công: {App.AuthToken.Substring(0, Math.Min(App.AuthToken.Length, 10))}...");
+                        // Gán token trực tiếp vào biến static của App
+                        string token = result.token.ToString();
+                        App.AuthToken = token;
+
+                        // Kiểm tra token đã được lưu đúng
+                        Debug.WriteLine($"Token lưu thành công: {(App.AuthToken != null && App.AuthToken.Length > 10 ? App.AuthToken.Substring(0, 10) + "..." : "Invalid Token")}");
+
+                        // Cấu hình header cho HttpClient
+                        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", App.AuthToken);
 
                         // Lấy tên đơn vị
                         await GetCompanyName();
@@ -497,6 +519,31 @@ namespace HoaDonDienTu
             catch (Exception ex)
             {
                 Debug.WriteLine($"Lỗi khi lấy thông tin công ty: {ex.Message}");
+            }
+        }
+
+        private bool CheckRequiredLibraries()
+        {
+            try
+            {
+                // Kiểm tra thư viện WindowsAPICodePack
+                var type = Type.GetType("Microsoft.WindowsAPICodePack.Shell.CommonOpenFileDialog, Microsoft.WindowsAPICodePack.Shell");
+                if (type == null)
+                {
+                    Debug.WriteLine("Không tìm thấy thư viện Microsoft.WindowsAPICodePack.Shell");
+                    MessageBox.Show("Thiếu thư viện cần thiết: Microsoft.WindowsAPICodePack.Shell",
+                                   "Lỗi thư viện", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return false;
+                }
+
+                Debug.WriteLine("Đã tìm thấy tất cả các thư viện cần thiết");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi khi kiểm tra thư viện: {ex.Message}");
+                MessageBox.Show($"Lỗi khi kiểm tra thư viện: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
             }
         }
     }

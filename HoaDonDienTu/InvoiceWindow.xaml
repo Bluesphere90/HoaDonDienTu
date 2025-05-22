@@ -5,9 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:HoaDonDienTu"
         mc:Ignorable="d"
-        Title="Quản Lý Hóa Đơn Điện Tử" Height="700" Width="1000"
+        Title="Quản Lý Hóa Đơn Điện Tử" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="#F0F0F0">
+
+    <!-- Thêm Resources nếu bạn muốn dùng Converter thay vì thuộc tính Formatted trong Model -->
+    <Window.Resources>
+        <!--<local:CurrencyFormatConverter x:Key="CurrencyFormatConverter"/>-->
+        <!--<local:DecimalFormatConverter x:Key="DecimalFormatConverter"/> // Nếu bạn có converter cho số lượng, tỷ giá-->
+        <Style x:Key="RightAlignStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
+    </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>
@@ -47,7 +57,6 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Invoice Type Selection -->
                     <GroupBox Grid.Column="0" Header="Loại hóa đơn" Margin="0,0,10,0">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton x:Name="optMua" Content="Hóa đơn mua vào" 
@@ -57,7 +66,6 @@
                         </StackPanel>
                     </GroupBox>
 
-                    <!-- Date Range -->
                     <Grid Grid.Column="2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -65,10 +73,8 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
-
                         <TextBlock Grid.Column="0" Text="Từ ngày:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <DatePicker x:Name="dpTuNgay" Grid.Column="1" SelectedDateChanged="dpTuNgay_SelectedDateChanged"/>
-
                         <TextBlock Grid.Column="2" Text="Đến ngày:" VerticalAlignment="Center" Margin="10,0,5,0"/>
                         <DatePicker x:Name="dpDenNgay" Grid.Column="3" SelectedDateChanged="dpDenNgay_SelectedDateChanged"/>
                     </Grid>
@@ -84,10 +90,8 @@
                         <ColumnDefinition Width="200"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-
                     <TextBlock Grid.Column="0" Text="Trạng thái hóa đơn:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <ComboBox x:Name="cboTTHD" Grid.Column="1" Height="25" SelectionChanged="cboTTHD_SelectionChanged"/>
-
                     <TextBlock Grid.Column="3" Text="Kết quả kiểm tra:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <ComboBox x:Name="cboKQKT" Grid.Column="4" Height="25" SelectionChanged="cboKQKT_SelectionChanged"/>
                 </Grid>
@@ -99,27 +103,20 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-
-                    <!-- Options -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <CheckBox x:Name="chkTH" Content="Tổng hợp" Margin="0,0,15,0" IsChecked="True"/>
-                        <CheckBox x:Name="chkCT" Content="Chi tiết" Margin="0,0,15,0" IsChecked="True"/>
-                        <CheckBox x:Name="chkXmlZip" Content="Tải XML/HTML" Margin="0,0,5,0" Checked="chkXmlZip_Checked"/>
+                        <CheckBox x:Name="chkTH" Content="Tổng hợp" Margin="0,0,15,0" IsChecked="True" ToolTip="Tải danh sách hóa đơn tổng hợp"/>
+                        <CheckBox x:Name="chkCT" Content="Chi tiết" Margin="0,0,15,0" IsChecked="True" ToolTip="Tải chi tiết từng hóa đơn (bao gồm các dòng hàng hóa)"/>
+                        <CheckBox x:Name="chkXmlZip" Content="Tải XML/HTML" Margin="0,0,5,0" Checked="chkXmlZip_Checked" Unchecked="chkXmlZip_Unchecked" ToolTip="Tải file Zip chứa XML (và có thể cả PDF/HTML) của hóa đơn"/>
                     </StackPanel>
-
-                    <!-- XML Folder Selection -->
                     <Grid Grid.Column="1" Margin="10,0,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-
                         <TextBox x:Name="txtXMLFolderPath" Grid.Column="0" Height="25" IsEnabled="False"/>
                         <Button x:Name="btnChonFolder" Grid.Column="1" Content="..." Width="30" Height="25" 
                                 Margin="5,0,0,0" IsEnabled="False" Click="btnChonFolder_Click"/>
                     </Grid>
-
-                    <!-- Search Button -->
                     <Button x:Name="btnTaiHoaDon" Grid.Column="2" Content="TẢI HÓA ĐƠN" Width="120" Height="35"
                             Background="#4CAF50" Foreground="White" FontWeight="Bold"
                             Click="btnTaiHoaDon_Click"/>
@@ -130,7 +127,8 @@
         <!-- Data Display Area -->
         <TabControl Grid.Row="2" Margin="10,5,10,10">
             <TabItem Header="Tổng Hợp">
-                <DataGrid x:Name="dgTongHop" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid x:Name="dgTongHop" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          AlternatingRowBackground="LightBlue" RowHeaderWidth="0">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="STT" Binding="{Binding STT}" Width="50"/>
                         <DataGridTextColumn Header="Ngày HĐ" Binding="{Binding NgayHD}" Width="100"/>
@@ -138,48 +136,92 @@
                         <DataGridTextColumn Header="Tên đơn vị" Binding="{Binding TenDV}" Width="*"/>
                         <DataGridTextColumn Header="Ký hiệu" Binding="{Binding KyHieu}" Width="100"/>
                         <DataGridTextColumn Header="Số HĐ" Binding="{Binding SoHD}" Width="80"/>
-                        <DataGridTextColumn Header="Trạng thái" Binding="{Binding TrangThai}" Width="120"/>
-                        <DataGridTextColumn Header="Tổng tiền" Binding="{Binding TongTien}" Width="120"/>
+                        <DataGridTextColumn Header="Trạng thái" Binding="{Binding TrangThai}" Width="180"/>
+                        <DataGridTextColumn Header="Tổng tiền" Binding="{Binding TongTien}" Width="120" ElementStyle="{StaticResource RightAlignStyle}"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
             <TabItem Header="Chi Tiết">
-                <DataGrid x:Name="dgChiTiet" AutoGenerateColumns="False" IsReadOnly="True">
+                <DataGrid x:Name="dgChiTiet" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                          FrozenColumnCount="7" AlternatingRowBackground="LightYellow" RowHeaderWidth="0">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="STT" Binding="{Binding STT}" Width="50"/>
-                        <DataGridTextColumn Header="Ngày HĐ" Binding="{Binding NgayHD}" Width="100"/>
-                        <DataGridTextColumn Header="MST" Binding="{Binding MST}" Width="120"/>
-                        <DataGridTextColumn Header="Ký hiệu" Binding="{Binding KyHieu}" Width="100"/>
-                        <DataGridTextColumn Header="Số HĐ" Binding="{Binding SoHD}" Width="80"/>
-                        <DataGridTextColumn Header="Mã HH" Binding="{Binding MaHH}" Width="100"/>
-                        <DataGridTextColumn Header="Tên hàng hóa" Binding="{Binding TenHH}" Width="*"/>
-                        <DataGridTextColumn Header="Đơn vị" Binding="{Binding DonVi}" Width="70"/>
-                        <DataGridTextColumn Header="Số lượng" Binding="{Binding SoLuong}" Width="80"/>
-                        <DataGridTextColumn Header="Đơn giá" Binding="{Binding DonGia}" Width="100"/>
-                        <DataGridTextColumn Header="Thành tiền" Binding="{Binding ThanhTien}" Width="120"/>
+                        <!-- Thông tin chung của hóa đơn (lặp lại) -->
+                        <DataGridTextColumn Header="Mẫu Số HĐ" Binding="{Binding MauSoHoaDon}" Width="80"/>
+                        <DataGridTextColumn Header="Ký Hiệu HĐ" Binding="{Binding KyHieuHoaDon}" Width="80"/>
+                        <DataGridTextColumn Header="Số HĐ" Binding="{Binding SoHoaDon}" Width="80"/>
+                        <DataGridTextColumn Header="Ngày Lập" Binding="{Binding NgayLapHoaDon}" Width="90"/>
+                        <DataGridTextColumn Header="MST Bán" Binding="{Binding MaSoThueNguoiBan}" Width="100"/>
+                        <DataGridTextColumn Header="Tên Người Bán" Binding="{Binding TenNguoiBan}" Width="250"/>
+                        <DataGridTextColumn Header="Địa Chỉ Bán" Binding="{Binding DiaChiNguoiBan}" Width="300"/>
+
+                        <!-- Thông tin chi tiết dòng hàng hóa -->
+                        <DataGridTextColumn Header="STT Dòng" Binding="{Binding SoThuTuDong}" Width="60" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Mã HH" Binding="{Binding MaHHDV}" Width="100"/>
+                        <DataGridTextColumn Header="Tên Hàng Hóa/Dịch Vụ" Binding="{Binding TenHHDV}" Width="300"/>
+                        <DataGridTextColumn Header="ĐVT" Binding="{Binding DonViTinh}" Width="70"/>
+                        <DataGridTextColumn Header="Số Lượng" Binding="{Binding SoLuongFormatted}" Width="100" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Đơn Giá" Binding="{Binding DonGiaFormatted}" Width="120" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Tiền CK" Binding="{Binding SoTienChietKhau, StringFormat={}{0:N0}, ConverterCulture=vi-VN}" Width="100" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Thành Tiền" Binding="{Binding ThanhTienChuaThueFormatted}" Width="130" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Loại TS" Binding="{Binding LoaiThueSuat}" Width="70"/>
+                        <DataGridTextColumn Header="Tiền Thuế" Binding="{Binding TienThueFormatted}" Width="120" ElementStyle="{StaticResource RightAlignStyle}"/>
+
+                        <!-- Thông tin chung của hóa đơn (tiếp theo) -->
+                        <DataGridTextColumn Header="MST Mua" Binding="{Binding MaSoThueNguoiMua}" Width="100"/>
+                        <DataGridTextColumn Header="Tên Người Mua" Binding="{Binding TenNguoiMua}" Width="250"/>
+                        <DataGridTextColumn Header="Địa Chỉ Mua" Binding="{Binding DiaChiNguoiMua}" Width="300"/>
+                        <DataGridTextColumn Header="Ngày Ký" Binding="{Binding NgayKy}" Width="90"/>
+                        <DataGridTextColumn Header="Mã CQT HĐ" Binding="{Binding MaCQT}" Width="100"/>
+                        <DataGridTextColumn Header="ĐV Tiền Tệ" Binding="{Binding DonViTienTe}" Width="80"/>
+                        <DataGridTextColumn Header="Tỷ Giá" Binding="{Binding TyGia, StringFormat={}{0:N}}" Width="70" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="HT Thanh Toán" Binding="{Binding HinhThucThanhToan}" Width="150"/>
+
+                        <!-- Thông tin tổng của hóa đơn (lặp lại) -->
+                        <DataGridTextColumn Header="Tổng Tiền Hàng (HĐ)" Binding="{Binding TongTienChuaThue_HD_Formatted}" Width="150" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Tổng Tiền Thuế (HĐ)" Binding="{Binding TongTienThue_HD_Formatted}" Width="150" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Tổng CK TM (HĐ)" Binding="{Binding TongTienChietKhauTM_HD, StringFormat={}{0:N0}, ConverterCulture=vi-VN}" Width="150" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Tổng Thanh Toán (HĐ)" Binding="{Binding TongTienThanhToan_HD_Formatted}" Width="160" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Tiền Bằng Chữ (HĐ)" Binding="{Binding TongTienThanhToanBangChu_HD}" Width="400"/>
+                        <DataGridTextColumn Header="Trạng Thái HĐ" Binding="{Binding TrangThai_HD}" Width="180"/>
+                        <DataGridTextColumn Header="Xử Lý HĐ" Binding="{Binding TinhTrangXuLy_HD}" Width="200"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>
-            <TabItem Header="XML/HTML">
+            <TabItem Header="XML/HTML Đã Tải">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Button x:Name="btnChiTietXML" Content="Trích xuất XML" Width="120" Height="30"
+                    <Button x:Name="btnChiTietXML" Content="Trích xuất XML (Nâng cao)" Width="180" Height="30"
                             Grid.Row="0" HorizontalAlignment="Left" Margin="10,5,0,5"
-                            Click="btnChiTietXML_Click"/>
+                            Click="btnChiTietXML_Click" ToolTip="Mở công cụ xem/trích xuất chi tiết từ file XML đã chọn"/>
 
-                    <ListView x:Name="lvXMLFiles" Grid.Row="1" Margin="5">
+                    <ListView x:Name="lvXMLFiles" Grid.Row="1" Margin="5" AlternationCount="2">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Tên file" Width="250" DisplayMemberBinding="{Binding Name}"/>
-                                <GridViewColumn Header="Kích thước" Width="100" DisplayMemberBinding="{Binding Size}"/>
-                                <GridViewColumn Header="Ngày tạo" Width="150" DisplayMemberBinding="{Binding DateCreated}"/>
-                                <GridViewColumn Header="Đường dẫn" Width="400" DisplayMemberBinding="{Binding Path}"/>
+                                <GridViewColumn Header="Tên file" Width="300" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="Kích thước (Bytes)" Width="120">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Length, StringFormat={}{0:N0}}" HorizontalAlignment="Right"/>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                                <GridViewColumn Header="Ngày tạo" Width="150" DisplayMemberBinding="{Binding CreationTime, StringFormat='dd/MM/yyyy HH:mm'}"/>
+                                <GridViewColumn Header="Đường dẫn" Width="450" DisplayMemberBinding="{Binding DirectoryName}"/>
                             </GridView>
                         </ListView.View>
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Style.Triggers>
+                                    <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                                        <Setter Property="Background" Value="LightGray"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListView.ItemContainerStyle>
                     </ListView>
                 </Grid>
             </TabItem>
@@ -191,7 +233,7 @@
                 <TextBlock x:Name="lblStatus" Text="Sẵn sàng"/>
             </StatusBarItem>
             <StatusBarItem HorizontalAlignment="Right">
-                <TextBlock x:Name="lblSaiNgay" Text="Sai định dạng ngày!" Foreground="Red" Visibility="Collapsed"/>
+                <TextBlock x:Name="lblSaiNgay" Text="Khoảng thời gian không hợp lệ!" Foreground="Red" Visibility="Collapsed"/>
             </StatusBarItem>
         </StatusBar>
     </Grid>
