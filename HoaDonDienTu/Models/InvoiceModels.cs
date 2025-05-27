@@ -266,15 +266,15 @@ namespace HoaDonDienTu.Models
             if (string.IsNullOrEmpty(statusCode)) return "Không xác định";
             switch (statusCode)
             {
-                case "0": return "Chưa duyệt";
-                case "1": return "Đã duyệt"; // Hoặc "HĐ có mã CQT"
-                case "2": return "Đã hủy";
-                case "3": return "Đang duyệt";
-                case "4": return "Từ chối duyệt"; // Hoặc "HĐ bị thay thế/điều chỉnh/hủy"
-                case "5": return "Chờ hủy";     // Hoặc "HĐ đã ĐKSD, CQT chấp nhận" (ttxly=5)
-                default: return $"Không xác định ({statusCode})";
+                case "1": return "Hóa đơn mới";
+                case "2": return "Hóa đơn thay thế";
+                case "3": return "Hóa đơn điều chỉnh";
+                case "4": return "Hóa đơn bị thay thế";
+                case "5": return "Hóa đơn đã bị điều chỉnh";
+                case "6": return "Hóa đơn bị hủy";
+                default: return $"Mã không xác định ({statusCode})";
 
-                // CUNG CẤP LẠI DANH SÁCH CHÍNH XÁC
+                    // Danh sách tthai từ tài liệu API
             }
         }
 
@@ -284,13 +284,17 @@ namespace HoaDonDienTu.Models
             // Đây là mã ttxly - cần tài liệu chính xác từ GDT hoặc dựa trên các mẫu
             switch (statusCode)
             {
-                case "0": return "Chưa kiểm tra";
-                case "1": return "Hợp lệ";
-                case "2": return "Không hợp lệ (Sai MST)"; // Ví dụ
-                case "5": return "HĐ đã ĐK sử dụng, CQT chấp nhận"; // Thường thấy khi hóa đơn mới phát hành qua TVAN
-                case "6": return "HĐ có Mã CQT, đang hoạt động"; // Thường thấy với hóa đơn đã có mã CQT
+                case "0": return "Tổng cục thuế đã nhận";
+                case "1": return "Đang tiến hành kiểm tra điều kiện cấp mã";
+                case "2": return "CQT từ chối theo từng lần phát sinh"; 
+                case "3": return "Hóa đơn đủ điều kiện cấp mã";
+                case "4": return "Hóa đơn không đủ điều kiện cấp mã";
+                case "5": return "Đã cấp mã hóa đơn";
+                case "6": return "Tổng cục thuế đã nhận không mã";
+                case "7": return "Đã kiểm tra HĐĐT định kỳ không có mã";
+                case "8": return "Tổng cục thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền";
                 // Thêm các case khác dựa trên tài liệu API
-                default: return $"Chưa xác định ({statusCode})";
+                default: return $"Mã không xác định ({statusCode})";
 
             }
         }

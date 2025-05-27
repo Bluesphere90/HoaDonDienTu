@@ -169,6 +169,7 @@
 
                 <!-- Row 3: Action Buttons -->
                 <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+                    <CheckBox x:Name="chkBackgroundMode" Content="Chế độ tải nền (chậm hơn)" Margin="10,10,10,0"/>
                     <Button x:Name="btnTaiHoaDon" Content="TẢI HÓA ĐƠN" 
                             Style="{StaticResource ActionButtonStyle}"
                             Click="btnTaiHoaDon_Click"/>
@@ -217,6 +218,8 @@
                         <DataGridTextColumn Header="Ký Hiệu HĐ" Binding="{Binding KyHieuHoaDon}" Width="80"/>
                         <DataGridTextColumn Header="Số HĐ" Binding="{Binding SoHoaDon}" Width="80"/>
                         <DataGridTextColumn Header="Ngày Lập" Binding="{Binding NgayLapHoaDon}" Width="90"/>
+                        <DataGridTextColumn Header="Ngày Ký" Binding="{Binding NgayKy}" Width="90"/>
+                        <DataGridTextColumn Header="Mã CQT HĐ" Binding="{Binding MaCQT}" Width="100"/>
                         <DataGridTextColumn Header="MST Bán" Binding="{Binding MaSoThueNguoiBan}" Width="100"/>
                         <DataGridTextColumn Header="Tên Người Bán" Binding="{Binding TenNguoiBan}" Width="250"/>
                         <DataGridTextColumn Header="Địa Chỉ Bán" Binding="{Binding DiaChiNguoiBan}" Width="300"/>
@@ -237,8 +240,7 @@
                         <DataGridTextColumn Header="MST Mua" Binding="{Binding MaSoThueNguoiMua}" Width="100"/>
                         <DataGridTextColumn Header="Tên Người Mua" Binding="{Binding TenNguoiMua}" Width="250"/>
                         <DataGridTextColumn Header="Địa Chỉ Mua" Binding="{Binding DiaChiNguoiMua}" Width="300"/>
-                        <DataGridTextColumn Header="Ngày Ký" Binding="{Binding NgayKy}" Width="90"/>
-                        <DataGridTextColumn Header="Mã CQT HĐ" Binding="{Binding MaCQT}" Width="100"/>
+                        
                         <DataGridTextColumn Header="ĐV Tiền Tệ" Binding="{Binding DonViTienTe}" Width="80"/>
                         <DataGridTextColumn Header="Tỷ Giá" Binding="{Binding TyGia, StringFormat={}{0:N}}" Width="70" ElementStyle="{StaticResource RightAlignStyle}"/>
                         <DataGridTextColumn Header="HT Thanh Toán" Binding="{Binding HinhThucThanhToan}" Width="150"/>
