@@ -214,6 +214,7 @@
                           FrozenColumnCount="7" AlternatingRowBackground="LightYellow" RowHeaderWidth="0">
                     <DataGrid.Columns>
                         <!-- Thông tin chung của hóa đơn (lặp lại) -->
+                        <DataGridTextColumn Header="Loại HĐ" Binding="{Binding LoaiHoaDon}" Width="80"/>
                         <DataGridTextColumn Header="Mẫu Số HĐ" Binding="{Binding MauSoHoaDon}" Width="80"/>
                         <DataGridTextColumn Header="Ký Hiệu HĐ" Binding="{Binding KyHieuHoaDon}" Width="80"/>
                         <DataGridTextColumn Header="Số HĐ" Binding="{Binding SoHoaDon}" Width="80"/>
