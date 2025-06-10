@@ -426,8 +426,8 @@ namespace HoaDonDienTu.Services
                             MauSoHoaDon = header.khmshdon,
                             KyHieuHoaDon = header.khhdon,
                             SoHoaDon = header.shdon,
-                            NgayLapHoaDon = FormatHelper.FormatInvoiceDate(header.tdlap),
-                            NgayKy = FormatHelper.FormatInvoiceDate(header.nky),
+                            NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(header.tdlap),
+                            NgayKy = Helper.FormatHelper.FormatInvoiceDate(header.nky),
                             MaCQT = header.cqt,
                             DonViTienTe = header.dvtte,
                             TyGia = decimal.TryParse(header.tgia, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal tgVal) ? tgVal : (decimal?)null,
@@ -453,8 +453,8 @@ namespace HoaDonDienTu.Services
                             TongTienChietKhauTM_HD = header.ttcktmai,
                             TongTienThanhToan_HD = header.tgtttbso,
                             TongTienThanhToanBangChu_HD = header.tgtttbchu,
-                            TrangThai_HD = FormatHelper.GetInvoiceStatusDescription(header.tthai),
-                            TinhTrangXuLy_HD = FormatHelper.GetInvoiceProcessingStatusDescription(header.ttxly)
+                            TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(header.tthai),
+                            TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(header.ttxly)
                         };
                         displayItems.Add(displayItem);
                     }
@@ -467,7 +467,7 @@ namespace HoaDonDienTu.Services
                         KyHieuHoaDon = header.khhdon,
                         SoHoaDon = header.shdon,
                         TenHHDV = "Không có dòng chi tiết nào được lưu trong DB cho hóa đơn này.",
-                        TrangThai_HD = FormatHelper.GetInvoiceStatusDescription(header.tthai)
+                        TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(header.tthai)
                     };
                     displayItems.Add(displayItemMsg);
                 }

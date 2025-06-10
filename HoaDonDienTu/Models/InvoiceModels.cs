@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization; // Thêm cho CultureInfo
+using System.Text.Json.Serialization;
+using HoaDonDienTu.Helper;
 using Newtonsoft.Json;
 
 namespace HoaDonDienTu.Models
@@ -25,41 +27,452 @@ namespace HoaDonDienTu.Models
 
     public class InvoiceSummaryData // Dữ liệu thô từ API danh sách hóa đơn
     {
-        [JsonProperty("nbmst")]
-        public string Nbmst { get; set; }
+        [JsonPropertyName("id")]
+        public string id { get; set; }
 
-        [JsonProperty("nbten")]
-        public string Nban { get; set; }
+        [JsonPropertyName("nbmst")]
+        public string nbmst { get; set; }
 
-        [JsonProperty("khhdon")]
-        public string Khhdon { get; set; }
+        [JsonPropertyName("khmshdon")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string khmshdon { get; set; }
 
-        [JsonProperty("shdon")]
-        public string Shdon { get; set; }
+        [JsonPropertyName("khhdon")]
+        public string khhdon { get; set; }
 
-        [JsonProperty("khmshdon")]
-        public string Khmshdon { get; set; }
+        [JsonPropertyName("shdon")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string shdon { get; set; }
 
-        [JsonProperty("tdlap")]
-        public string Tdlap { get; set; } // Ngày lập dạng ISO string
+        [JsonPropertyName("cqt")]
+        public string cqt { get; set; }
 
-        [JsonProperty("tgtttbso")]
-        public string Tgtttbso { get; set; } // Tổng tiền dạng string, cần parse
+        [JsonPropertyName("cttkhac")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string cttkhac { get; set; }
 
-        [JsonProperty("tthai")]
-        public string Tthai { get; set; } // Mã trạng thái hóa đơn
+        [JsonPropertyName("dvtte")]
+        public string dvtte { get; set; }
+
+        [JsonPropertyName("hdon")]
+        public string hdon { get; set; }
+
+        [JsonPropertyName("hsgcma")]
+        public string hsgcma { get; set; }
+
+        [JsonPropertyName("hsgoc")]
+        public string hsgoc { get; set; }
+
+        [JsonPropertyName("hthdon")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string hthdon { get; set; }
+
+        [JsonPropertyName("htttoan")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string htttoan { get; set; }
+
+        [JsonPropertyName("idtbao")]
+        public string idtbao { get; set; }
+
+        [JsonPropertyName("khdon")]
+        public string khdon { get; set; }
+
+        [JsonPropertyName("khhdgoc")]
+        public string khhdgoc { get; set; }
+
+        [JsonPropertyName("khmshdgoc")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string khmshdgoc { get; set; }
+
+        [JsonPropertyName("lhdgoc")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string lhdgoc { get; set; }
+
+        [JsonPropertyName("mhdon")]
+        public string mhdon { get; set; }
+
+        [JsonPropertyName("mtdiep")]
+        public string mtdiep { get; set; }
+
+        [JsonPropertyName("mtdtchieu")]
+        public string mtdtchieu { get; set; }
+
+        [JsonPropertyName("nbdchi")]
+        public string nbdchi { get; set; }
+
+        [JsonPropertyName("chma")]
+        public string chma { get; set; }
+
+        [JsonPropertyName("chten")]
+        public string chten { get; set; }
+
+        [JsonPropertyName("nbhdktngay")]
+        public string nbhdktngay { get; set; }
+
+        [JsonPropertyName("nbhdktso")]
+        public string nbhdktso { get; set; }
+
+        [JsonPropertyName("nbhdso")]
+        public string nbhdso { get; set; }
+
+        [JsonPropertyName("nblddnbo")]
+        public string nblddnbo { get; set; }
+
+        [JsonPropertyName("nbptvchuyen")]
+        public string nbptvchuyen { get; set; }
+
+        [JsonPropertyName("nbstkhoan")]
+        public string nbstkhoan { get; set; }
+
+        [JsonPropertyName("nbten")]
+        public string nbten { get; set; }
+
+        [JsonPropertyName("nbtnhang")]
+        public string nbtnhang { get; set; }
+
+        [JsonPropertyName("nbtnvchuyen")]
+        public string nbtnvchuyen { get; set; }
+
+        [JsonPropertyName("nbttkhac")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string nbttkhac { get; set; }
+
+        [JsonPropertyName("ncma")]
+        public string ncma { get; set; }
+
+        [JsonPropertyName("ncnhat")]
+        public string ncnhat { get; set; }
+
+        [JsonPropertyName("ngcnhat")]
+        public string ngcnhat { get; set; }
+
+        [JsonPropertyName("nky")]
+        public string nky { get; set; }
+
+        [JsonPropertyName("nmdchi")]
+        public string nmdchi { get; set; }
+
+        [JsonPropertyName("nmmst")]
+        public string nmmst { get; set; }
+
+        [JsonPropertyName("nmstkhoan")]
+        public string nmstkhoan { get; set; }
+
+        [JsonPropertyName("nmten")]
+        public string nmten { get; set; }
+
+        [JsonPropertyName("nmtnhang")]
+        public string nmtnhang { get; set; }
+
+        [JsonPropertyName("nmtnmua")]
+        public string nmtnmua { get; set; }
+
+        [JsonPropertyName("nmttkhac")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string nmttkhac { get; set; }
+
+        [JsonPropertyName("ntao")]
+        public string ntao { get; set; }
+
+        [JsonPropertyName("ntnhan")]
+        public string ntnhan { get; set; }
+
+        [JsonPropertyName("pban")]
+        public string pban { get; set; }
+
+        [JsonPropertyName("ptgui")]
+        public string ptgui { get; set; }
+
+        [JsonPropertyName("shdgoc")]
+        public string shdgoc { get; set; }
+
+        [JsonPropertyName("tchat")]
+        public string tchat { get; set; }
+
+        [JsonPropertyName("tdlap")]
+        public string tdlap { get; set; }
+
+        [JsonPropertyName("tgia")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
+        public decimal? tgia { get; set; }
+
+        [JsonPropertyName("tgtcthue")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
+        public decimal? tgtcthue { get; set; }
+
+        [JsonPropertyName("tgtthue")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
+        public decimal? tgtthue { get; set; }
+
+        [JsonPropertyName("tgtttbchu")]
+        public string tgtttbchu { get; set; }
+
+        [JsonPropertyName("tgtttbso")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
+        public decimal? tgtttbso { get; set; }
+
+        [JsonPropertyName("thdon")]
+        public string thdon { get; set; }
+
+        [JsonPropertyName("thlap")]
+        public string thlap { get; set; }
+
+        [JsonPropertyName("thttlphi")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string thttlphi { get; set; }
+
+        [JsonPropertyName("thttltsuat")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string thttltsuat { get; set; }
+
+        [JsonPropertyName("tlhdon")]
+        public string tlhdon { get; set; }
+
+        [JsonPropertyName("ttcktmai")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
+        public decimal? ttcktmai { get; set; }
+
+        [JsonPropertyName("tthai")]
+        public string tthai { get; set; }
+
+        [JsonPropertyName("ttkhac")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string ttkhac { get; set; }
+
+        [JsonPropertyName("tttbao")]
+        public string tttbao { get; set; }
+
+        [JsonPropertyName("ttttkhac")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string ttttkhac { get; set; }
+
+        [JsonPropertyName("ttxly")]
+        public string ttxly { get; set; }
+
+        [JsonPropertyName("tvandnkntt")]
+        public string tvandnkntt { get; set; }
+
+        [JsonPropertyName("mhso")]
+        public string mhso { get; set; }
+
+        [JsonPropertyName("ladhddt")]
+        public string ladhddt { get; set; }
+
+        [JsonPropertyName("mkhang")]
+        public string mkhang { get; set; }
+
+        [JsonPropertyName("nbsdthoai")]
+        public string nbsdthoai { get; set; }
+
+        [JsonPropertyName("nbdctdtu")]
+        public string nbdctdtu { get; set; }
+
+        [JsonPropertyName("nbfax")]
+        public string nbfax { get; set; }
+
+        [JsonPropertyName("nbwebsite")]
+        public string nbwebsite { get; set; }
+
+        [JsonPropertyName("nbcks")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string nbcks { get; set; }
+
+        [JsonPropertyName("nmsdthoai")]
+        public string nmsdthoai { get; set; }
+
+        [JsonPropertyName("nmdctdtu")]
+        public string nmdctdtu { get; set; }
+
+        [JsonPropertyName("nmcmnd")]
+        public string nmcmnd { get; set; }
+
+        [JsonPropertyName("nmcks")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string nmcks { get; set; }
+
+        [JsonPropertyName("bhphap")]
+        public string bhphap { get; set; }
+
+        [JsonPropertyName("hddunlap")]
+        public string hddunlap { get; set; }
+
+        [JsonPropertyName("gchdgoc")]
+        public string gchdgoc { get; set; }
+
+        [JsonPropertyName("tbhgtngay")]
+        public string tbhgtngay { get; set; }
+
+        [JsonPropertyName("bhpldo")]
+        public string bhpldo { get; set; }
+
+        [JsonPropertyName("bhpcbo")]
+        public string bhpcbo { get; set; }
+
+        [JsonPropertyName("bhpngay")]
+        public string bhpngay { get; set; }
+
+        [JsonPropertyName("tdlhdgoc")]
+        public string tdlhdgoc { get; set; }
+
+        [JsonPropertyName("tgtphi")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string tgtphi { get; set; }
+
+        [JsonPropertyName("unhiem")]
+        public string unhiem { get; set; }
+
+        [JsonPropertyName("mstdvnunlhdon")]
+        public string mstdvnunlhdon { get; set; }
+
+        [JsonPropertyName("tdvnunlhdon")]
+        public string tdvnunlhdon { get; set; }
+
+        [JsonPropertyName("nbmdvqhnsach")]
+        public string nbmdvqhnsach { get; set; }
+
+        [JsonPropertyName("nbsqdinh")]
+        public string nbsqdinh { get; set; }
+
+        [JsonPropertyName("nbncqdinh")]
+        public string nbncqdinh { get; set; }
+
+        [JsonPropertyName("nbcqcqdinh")]
+        public string nbcqcqdinh { get; set; }
+
+        [JsonPropertyName("nbhtban")]
+        public string nbhtban { get; set; }
+
+        [JsonPropertyName("nmmdvqhnsach")]
+        public string nmmdvqhnsach { get; set; }
+
+        [JsonPropertyName("nmddvchden")]
+        public string nmddvchden { get; set; }
+
+        [JsonPropertyName("nmtgvchdtu")]
+        public string nmtgvchdtu { get; set; }
+
+        [JsonPropertyName("nmtgvchdden")]
+        public string nmtgvchdden { get; set; }
+
+        [JsonPropertyName("nbtnban")]
+        public string nbtnban { get; set; }
+
+        [JsonPropertyName("dcdvnunlhdon")]
+        public string dcdvnunlhdon { get; set; }
+
+        [JsonPropertyName("dksbke")]
+        public string dksbke { get; set; }
+
+        [JsonPropertyName("dknlbke")]
+        public string dknlbke { get; set; }
+
+        [JsonPropertyName("thtttoan")]
+        public string thtttoan { get; set; }
+
+        [JsonPropertyName("msttcgp")]
+        public string msttcgp { get; set; }
+
+        [JsonPropertyName("cqtcks")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string cqtcks { get; set; }
+
+        [JsonPropertyName("gchu")]
+        public string gchu { get; set; }
+
+        [JsonPropertyName("kqcht")]
+        public string kqcht { get; set; }
+
+        [JsonPropertyName("hdntgia")]
+        public string hdntgia { get; set; }
+
+        [JsonPropertyName("tgtkcthue")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string tgtkcthue { get; set; }
+
+        [JsonPropertyName("tgtkhac")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string tgtkhac { get; set; }
+
+        [JsonPropertyName("nmshchieu")]
+        public string nmshchieu { get; set; }
+
+        [JsonPropertyName("nmnchchieu")]
+        public string nmnchchieu { get; set; }
+
+        [JsonPropertyName("nmnhhhchieu")]
+        public string nmnhhhchieu { get; set; }
+
+        [JsonPropertyName("nmqtich")]
+        public string nmqtich { get; set; }
+
+        [JsonPropertyName("ktkhthue")]
+        public string ktkhthue { get; set; }
+
+        [JsonPropertyName("qrcode")]
+        public string qrcode { get; set; }
+
+        [JsonPropertyName("ttmstten")]
+        public string ttmstten { get; set; }
+
+        [JsonPropertyName("ladhddtten")]
+        public string ladhddtten { get; set; }
+
+        [JsonPropertyName("hdxkhau")]
+        public string hdxkhau { get; set; }
+
+        [JsonPropertyName("hdxkptquan")]
+        public string hdxkptquan { get; set; }
+
+        [JsonPropertyName("hdgktkhthue")]
+        public string hdgktkhthue { get; set; }
+
+        [JsonPropertyName("hdonLquans")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string hdonLquans { get; set; }
+
+        [JsonPropertyName("tthdclquan")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(BoolToStringConverter))]
+        public string tthdclquan { get; set; }
+
+        [JsonPropertyName("pdndungs")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string pdndungs { get; set; }
+
+        [JsonPropertyName("hdtbssrses")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string hdtbssrses { get; set; }
+
+        [JsonPropertyName("hdTrung")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
+        public string hdTrung { get; set; }
+
+        [JsonPropertyName("isHDTrung")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
+        public string isHDTrung { get; set; }
+
     }
 
     public class InvoiceSummary // Model cho DataGrid dgTongHop
     {
         public int STT { get; set; }
-        public string NgayHD { get; set; } // Đã định dạng dd/MM/yyyy
-        public string MST { get; set; }
-        public string TenDV { get; set; }
+        public string TenHoaDon { get; set; } // Tên hóa đơn, ví dụ: "Hóa đơn GTGT", "Hóa đơn bán hàng"
+        public string MauHoaDon { get; set; } // Mã mẫu hóa đơn
         public string KyHieu { get; set; }
         public string SoHD { get; set; }
+        public string NgayHD { get; set; } // Đã định dạng dd/MM/yyyy
+        public string DVTienTe { get; set; } // Đã định dạng tiền tệ
+        public decimal? TyGia { get; set; } // Giá trị tỷ giá, có thể null nếu không có
+        public string TenNguoiBan { get; set; }
+        public string MSTNguoiBan { get; set; }
+        public string DiaChiNguoiBan { get; set; } // Địa chỉ người bán
+        public string TenNguoiMua { get; set; }
+        public string MSTNguoiMua { get; set; } // Mã số thuế người mua
+        public string DiaChiNguoiMua { get; set; } // Địa chỉ người mua
+        public decimal? TongTienChuaThue { get; set; } // Tổng tiền chưa thuế, có thể null
+        public decimal? TongTienThue { get; set; } // Tổng tiền thuế, có thể null
         public string TrangThai { get; set; } // Đã diễn giải
-        public string TongTien { get; set; } // Đã định dạng tiền tệ
+        public string KetQuaKiemTraHoaDon { get; set; } // Kết quả kiểm tra hóa đơn (đã diễn giải)
+
     }
 
     // =========================================================================
@@ -415,14 +828,14 @@ namespace HoaDonDienTu.Models
         public string TinhTrangXuLy_HD { get; set; } // Đã diễn giải
 
         // Thuộc tính đã định dạng (có thể dùng Converter trong XAML thay thế)
-        public string DonGiaFormatted => FormatHelper.FormatCurrency(DonGia, 2); // Ví dụ 2 chữ số thập phân
-        public string ThanhTienChuaThueFormatted => FormatHelper.FormatCurrency(ThanhTienChuaThue);
-        public string TienThueFormatted => FormatHelper.FormatCurrency(TienThue);
+        public string DonGiaFormatted => Helper.FormatHelper.FormatCurrency(DonGia, 2); // Ví dụ 2 chữ số thập phân
+        public string ThanhTienChuaThueFormatted => Helper.FormatHelper.FormatCurrency(ThanhTienChuaThue);
+        public string TienThueFormatted => Helper.FormatHelper.FormatCurrency(TienThue);
         public string SoLuongFormatted => SoLuong.HasValue ? SoLuong.Value.ToString("N2", CultureInfo.GetCultureInfo("vi-VN")) : string.Empty; // Ví dụ định dạng số lượng
 
-        public string TongTienChuaThue_HD_Formatted => FormatHelper.FormatCurrency(TongTienChuaThue_HD);
-        public string TongTienThue_HD_Formatted => FormatHelper.FormatCurrency(TongTienThue_HD);
-        public string TongTienThanhToan_HD_Formatted => FormatHelper.FormatCurrency(TongTienThanhToan_HD);
+        public string TongTienChuaThue_HD_Formatted => Helper.FormatHelper.FormatCurrency(TongTienChuaThue_HD);
+        public string TongTienThue_HD_Formatted => Helper.FormatHelper.FormatCurrency(TongTienThue_HD);
+        public string TongTienThanhToan_HD_Formatted => Helper.FormatHelper.FormatCurrency(TongTienThanhToan_HD);
 
     }
 
@@ -438,82 +851,6 @@ namespace HoaDonDienTu.Models
         public bool IsScoQuery { get; set; }
         public string Tdlap { get; set; }
     }
-
-    // =========================================================================
-    // 4. FORMAT HELPER CLASS
-    // =========================================================================
-    public static class FormatHelper
-    {
-        public static string FormatInvoiceDate(string isoDate)
-        {
-            if (string.IsNullOrEmpty(isoDate)) return string.Empty;
-            if (DateTime.TryParse(isoDate, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AllowWhiteSpaces, out DateTime date))
-            {
-                return date.ToLocalTime().ToString("dd/MM/yyyy");
-            }
-            // Thử parse nếu chỉ có ngày tháng năm
-            if (DateTime.TryParseExact(isoDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date))
-            {
-                return date.ToString("dd/MM/yyyy");
-            }
-            return isoDate; // Trả về gốc nếu không parse được
-        }
-
-        public static string FormatCurrency(decimal? amount, int decimalPlaces = 0)
-        {
-            if (!amount.HasValue) return string.Empty; // Hoặc "0" tùy yêu cầu
-            return amount.Value.ToString($"N{decimalPlaces}", CultureInfo.GetCultureInfo("vi-VN"));
-        }
-
-        // Dùng cho InvoiceSummary.TongTien (là string)
-        public static string FormatCurrencyFromString(string amountStr, int decimalPlaces = 0)
-        {
-            if (string.IsNullOrEmpty(amountStr)) return string.Empty; // Hoặc "0"
-            if (decimal.TryParse(amountStr, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal value))
-            {
-                return value.ToString($"N{decimalPlaces}", CultureInfo.GetCultureInfo("vi-VN"));
-            }
-            return amountStr; // Trả về gốc nếu không parse được
-        }
-
-
-        public static string GetInvoiceStatusDescription(string statusCode)
-        {
-            if (string.IsNullOrEmpty(statusCode)) return "Không xác định";
-            switch (statusCode)
-            {
-                case "1": return "Hóa đơn mới";
-                case "2": return "Hóa đơn thay thế";
-                case "3": return "Hóa đơn điều chỉnh";
-                case "4": return "Hóa đơn bị thay thế";
-                case "5": return "Hóa đơn đã bị điều chỉnh";
-                case "6": return "Hóa đơn bị hủy";
-                default: return $"Mã không xác định ({statusCode})";
-
-                    // Danh sách tthai từ tài liệu API
-            }
-        }
-
-        public static string GetInvoiceProcessingStatusDescription(string statusCode)
-        {
-            if (string.IsNullOrEmpty(statusCode)) return "Chưa có";
-            // Đây là mã ttxly - cần tài liệu chính xác từ GDT hoặc dựa trên các mẫu
-            switch (statusCode)
-            {
-                case "0": return "Tổng cục thuế đã nhận";
-                case "1": return "Đang tiến hành kiểm tra điều kiện cấp mã";
-                case "2": return "CQT từ chối theo từng lần phát sinh"; 
-                case "3": return "Hóa đơn đủ điều kiện cấp mã";
-                case "4": return "Hóa đơn không đủ điều kiện cấp mã";
-                case "5": return "Đã cấp mã hóa đơn";
-                case "6": return "Tổng cục thuế đã nhận không mã";
-                case "7": return "Đã kiểm tra HĐĐT định kỳ không có mã";
-                case "8": return "Tổng cục thuế đã nhận hóa đơn có mã khởi tạo từ máy tính tiền";
-                // Thêm các case khác dựa trên tài liệu API
-                default: return $"Mã không xác định ({statusCode})";
-
-            }
-        }
-    }
 }
+
 // --- END OF FILE InvoiceModels.cs ---

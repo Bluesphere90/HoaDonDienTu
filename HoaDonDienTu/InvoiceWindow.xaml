@@ -197,14 +197,24 @@
                 <DataGrid x:Name="dgTongHop" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
                           AlternatingRowBackground="LightBlue" RowHeaderWidth="0">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="STT" Binding="{Binding STT}" Width="50"/>
-                        <DataGridTextColumn Header="Ngày HĐ" Binding="{Binding NgayHD}" Width="100"/>
-                        <DataGridTextColumn Header="MST" Binding="{Binding MST}" Width="120"/>
-                        <DataGridTextColumn Header="Tên đơn vị" Binding="{Binding TenDV}" Width="*"/>
-                        <DataGridTextColumn Header="Ký hiệu" Binding="{Binding KyHieu}" Width="100"/>
+                        <DataGridTextColumn Header="STT" Binding="{Binding STT}" Width="30"/>
+                        <DataGridTextColumn Header="Tên HĐ" Binding="{Binding TenHoaDon}" Width="70"/>
+                        <DataGridTextColumn Header="Mẫu HĐ" Binding="{Binding MauHoaDon}" Width="70"/>
+                        <DataGridTextColumn Header="Ký hiệu HĐ" Binding="{Binding KyHieu}" Width="50"/>
                         <DataGridTextColumn Header="Số HĐ" Binding="{Binding SoHD}" Width="80"/>
-                        <DataGridTextColumn Header="Trạng thái" Binding="{Binding TrangThai}" Width="180"/>
-                        <DataGridTextColumn Header="Tổng tiền" Binding="{Binding TongTien}" Width="120" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Ngày HĐ" Binding="{Binding NgayHD}" Width="100"/>
+                        <DataGridTextColumn Header="Đơn vị tiền tệ" Binding="{Binding DVTienTe}" Width="90"/>
+                        <DataGridTextColumn Header="Tỷ giá" Binding="{Binding TyGia, StringFormat={}{0:N}}" Width="50"/>
+                        <DataGridTextColumn Header="Tên người bán" Binding="{Binding TenNguoiBan}" Width="150"/>
+                        <DataGridTextColumn Header="MST người bán" Binding="{Binding MSTNguoiBan}" Width="150" ElementStyle="{StaticResource RightAlignStyle}"/>
+                        <DataGridTextColumn Header="Địa chỉ người bán" Binding="{Binding DiaChiNguoiBan}" Width="150"/>
+                        <DataGridTextColumn Header="Tên người mua" Binding="{Binding TenNguoiMua}" Width="150"/>
+                        <DataGridTextColumn Header="MST người mua" Binding="{Binding MSTNguoiMua}" Width="150"/>
+                        <DataGridTextColumn Header="Địa chỉ người mua" Binding="{Binding DiaChiNguoiMua}" Width="150"/>
+                        <DataGridTextColumn Header="Tổng tiền chưa thuế" Binding="{Binding TongTienChuaThue, StringFormat={}{0:N0}}" Width="150"/>
+                        <DataGridTextColumn Header="Tổng tiền thuế" Binding="{Binding TongTienThue, StringFormat={}{0:N0}}" Width="150"/>
+                        <DataGridTextColumn Header="Trạng thái" Binding="{Binding TrangThai}" Width="150"/>
+                        <DataGridTextColumn Header="Kết quả kiểm tra hóa đơn" Binding="{Binding KetQuaKiemTraHoaDon}" Width="150"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </TabItem>

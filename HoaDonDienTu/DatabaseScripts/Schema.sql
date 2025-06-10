@@ -226,7 +226,7 @@ CREATE TABLE IF NOT EXISTS OutputInv (
     shdgoc                   TEXT,
     tchat                    TEXT,
     tdlap                    TEXT,
-    tgia                     TEXT,
+    tgia                     REAL,
     tgtcthue                 REAL,
     tgtthue                  REAL,
     tgtttbchu                TEXT,

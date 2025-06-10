@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
-using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -21,7 +20,9 @@ using System.Globalization; // For CultureInfo
 using OfficeOpenXml;         // For EPPlus
 using OfficeOpenXml.Style;    // For EPPlus Style
 using System.Drawing;         // For System.Drawing.Color (EPPlus)
-using System.Xml.Linq;      // For XDocument, XElement (XML Export)
+using System.Xml.Linq;
+using System.Text.Json;      // For XDocument, XElement (XML Export)
+
 
 
 namespace HoaDonDienTu
@@ -491,8 +492,11 @@ namespace HoaDonDienTu
                     if (!response.IsSuccessStatusCode) { Debug.WriteLine($"Lỗi API (Summaries) {response.StatusCode}: {currentUrl}"); break; }
 
                     var content = await response.Content.ReadAsStringAsync();
-
-                    var result = JsonConvert.DeserializeObject<InvoiceQueryResult>(content);
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var result = System.Text.Json.JsonSerializer.Deserialize<InvoiceQueryResult>(content);
 
                     if (result?.Datas != null && result.Datas.Any())
                     {
@@ -503,14 +507,34 @@ namespace HoaDonDienTu
                             {
                                 var summary = new InvoiceSummary
                                 {
+                                    //STT = currentIndex,
+                                    //NgayHD = FormatHelper.FormatInvoiceDate(invoiceData.Tdlap),
+                                    //MST = invoiceData.Nbmst,
+                                    //TenDV = invoiceData.Nban,
+                                    //KyHieu = invoiceData.Khhdon,
+                                    //SoHD = invoiceData.Shdon,
+                                    //TrangThai = FormatHelper.GetInvoiceStatusDescription(invoiceData.Tthai),
+                                    //TongTien = FormatHelper.FormatCurrencyFromString(invoiceData.Tgtttbso)
+
                                     STT = currentIndex,
-                                    NgayHD = FormatHelper.FormatInvoiceDate(invoiceData.Tdlap),
-                                    MST = invoiceData.Nbmst,
-                                    TenDV = invoiceData.Nban,
-                                    KyHieu = invoiceData.Khhdon,
-                                    SoHD = invoiceData.Shdon,
-                                    TrangThai = FormatHelper.GetInvoiceStatusDescription(invoiceData.Tthai),
-                                    TongTien = FormatHelper.FormatCurrencyFromString(invoiceData.Tgtttbso)
+                                    TenHoaDon = invoiceData.tlhdon,
+                                    MauHoaDon = invoiceData.khmshdon,
+                                    KyHieu = invoiceData.khhdon,
+                                    SoHD = invoiceData.shdon,
+                                    NgayHD = Helper.FormatHelper.FormatInvoiceDate(invoiceData.tdlap),
+                                    DVTienTe = invoiceData.dvtte,
+                                    TyGia = invoiceData.tgia,
+                                    TenNguoiBan = invoiceData.nbten,
+                                    MSTNguoiBan = invoiceData.nbmst,
+                                    DiaChiNguoiBan = invoiceData.nbdchi,
+                                    TenNguoiMua = invoiceData.nmten,
+                                    MSTNguoiMua = invoiceData.nmmst,
+                                    DiaChiNguoiMua = invoiceData.nmdchi,
+                                    TongTienChuaThue = invoiceData.tgtcthue,
+                                    TongTienThue = invoiceData.tgtthue,
+                                    TrangThai = Helper.FormatHelper.GetInvoiceStatusDescription(invoiceData.tthai),
+                                    KetQuaKiemTraHoaDon = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(invoiceData.ttxly),
+
                                 };
                                 
                                 System.Windows.Application.Current.Dispatcher.Invoke(() => invoiceSummaryList.Add(summary));
@@ -519,12 +543,12 @@ namespace HoaDonDienTu
                             
                             invoiceIdentifiers.Add(new InvoiceIdentifier
                             {
-                                Nbmst = invoiceData.Nbmst,
-                                Khhdon = invoiceData.Khhdon,
-                                Shdon = invoiceData.Shdon,
-                                Khmshdon = invoiceData.Khmshdon,
+                                Nbmst = invoiceData.nbmst,
+                                Khhdon = invoiceData.khhdon,
+                                Shdon = invoiceData.shdon,
+                                Khmshdon = invoiceData.khmshdon,
                                 IsScoQuery = isScoQuery,
-                                Tdlap = invoiceData.Tdlap
+                                Tdlap = invoiceData.tdlap
                             });
                         }
                         if (!string.IsNullOrEmpty(result.State))
@@ -613,7 +637,7 @@ namespace HoaDonDienTu
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync();
-                        var apiResponseData = JsonConvert.DeserializeObject<InvoiceDetailApiResponse>(content);
+                        var apiResponseData = System.Text.Json.JsonSerializer.Deserialize<InvoiceDetailApiResponse>(content);
 
                         if (apiResponseData != null)
                         {
@@ -631,8 +655,8 @@ namespace HoaDonDienTu
                                         MauSoHoaDon = apiResponseData.ApiMauSoHoaDon,
                                         KyHieuHoaDon = apiResponseData.ApiKyHieuHoaDon,
                                         SoHoaDon = apiResponseData.ApiSoHoaDon,
-                                        NgayLapHoaDon = FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayLapHoaDonISO),
-                                        NgayKy = FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayKyISO),
+                                        NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayLapHoaDonISO),
+                                        NgayKy = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayKyISO),
                                         MaCQT = apiResponseData.ApiMaCQT,
                                         DonViTienTe = apiResponseData.ApiDonViTienTe,
                                         TyGia = apiResponseData.ApiTyGia,
@@ -654,8 +678,8 @@ namespace HoaDonDienTu
                                         TienThue = rawItem.TienThueRaw,
                                         
                                         
-                                        TrangThai_HD = FormatHelper.GetInvoiceStatusDescription(apiResponseData.ApiTrangThaiHD_Code),
-                                        TinhTrangXuLy_HD = FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ApiTinhTrangXuLy_Code)
+                                        TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(apiResponseData.ApiTrangThaiHD_Code),
+                                        TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ApiTinhTrangXuLy_Code)
                                     };
 
                                     if (displayItem.SoThuTuDong == 1)
@@ -677,13 +701,13 @@ namespace HoaDonDienTu
                                     MauSoHoaDon = apiResponseData.ApiMauSoHoaDon ?? invoiceIdentity.Khmshdon,
                                     KyHieuHoaDon = apiResponseData.ApiKyHieuHoaDon ?? invoiceIdentity.Khhdon,
                                     SoHoaDon = apiResponseData.ApiSoHoaDon ?? invoiceIdentity.Shdon,
-                                    NgayLapHoaDon = FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayLapHoaDonISO ?? invoiceIdentity.Tdlap),
+                                    NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayLapHoaDonISO ?? invoiceIdentity.Tdlap),
                                     TenNguoiBan = apiResponseData.ApiTenNguoiBan,
                                     TenNguoiMua = apiResponseData.ApiTenNguoiMua,
                                     TenHHDV = "Không có dữ liệu chi tiết hoặc hóa đơn không có dòng hàng hóa.",
                                     TongTienThanhToan_HD = apiResponseData.ApiTongTienThanhToan,
-                                    TrangThai_HD = FormatHelper.GetInvoiceStatusDescription(apiResponseData.ApiTrangThaiHD_Code),
-                                    TinhTrangXuLy_HD = FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ApiTinhTrangXuLy_Code)
+                                    TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(apiResponseData.ApiTrangThaiHD_Code),
+                                    TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ApiTinhTrangXuLy_Code)
                                 };
                                 System.Windows.Application.Current.Dispatcher.Invoke(() => invoiceDetailList.Add(displayItemMsg));
                             }
@@ -761,7 +785,7 @@ namespace HoaDonDienTu
                 MauSoHoaDon = invoiceIdentity.Khmshdon,
                 KyHieuHoaDon = invoiceIdentity.Khhdon,
                 SoHoaDon = invoiceIdentity.Shdon,
-                NgayLapHoaDon = FormatHelper.FormatInvoiceDate(invoiceIdentity.Tdlap), // Lấy ngày lập từ identity
+                NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(invoiceIdentity.Tdlap), // Lấy ngày lập từ identity
                 MaSoThueNguoiBan = invoiceIdentity.Nbmst,
                 // Có thể thêm Tên Người Bán/Mua nếu bạn lưu chúng trong InvoiceIdentifier hoặc có thể truy vấn nhanh
                 // Tuy nhiên, để đơn giản, chỉ hiển thị các thông tin có sẵn ngay từ InvoiceIdentifier
@@ -903,8 +927,16 @@ namespace HoaDonDienTu
 
         private void ExportTongHopToCSV()
         {
-            if (!invoiceSummaryList.Any()) { System.Windows.MessageBox.Show("Không có dữ liệu tổng hợp.", "Thông báo"); return; }
-            Microsoft.Win32.SaveFileDialog sfd = new Microsoft.Win32.SaveFileDialog { Filter = "CSV file (*.csv)|*.csv", FileName = $"TongHopHD_{DateTime.Now:yyyyMMddHHmmss}.csv" };
+            if (!invoiceSummaryList.Any())
+            {
+                System.Windows.MessageBox.Show("Không có dữ liệu tổng hợp.", "Thông báo");
+                return;
+            }
+            Microsoft.Win32.SaveFileDialog sfd = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "CSV file (*.csv)|*.csv",
+                FileName = $"TongHopHD_{DateTime.Now:yyyyMMddHHmmss}.csv"
+            };
             if (sfd.ShowDialog() == true)
             {
                 try
@@ -915,15 +947,23 @@ namespace HoaDonDienTu
                         foreach (var item in invoiceSummaryList)
                         {
                             writer.WriteLine(string.Join(",",
-                                item.STT, EscapeCsvField(item.NgayHD), EscapeCsvField(item.MST), EscapeCsvField(item.TenDV),
-                                EscapeCsvField(item.KyHieu), EscapeCsvField(item.SoHD), EscapeCsvField(item.TrangThai),
-                                EscapeCsvField(item.TongTien?.Replace(",", "")) // Bỏ dấu phân cách ngàn nếu có từ định dạng
+                                item.STT,
+                                EscapeCsvField(item.NgayHD),
+                                EscapeCsvField(item.MSTNguoiBan),
+                                EscapeCsvField(item.TenNguoiBan),
+                                EscapeCsvField(item.KyHieu),
+                                EscapeCsvField(item.SoHD),
+                                EscapeCsvField(item.TrangThai),
+                                EscapeCsvField(item.TongTienChuaThue?.ToString(CultureInfo.InvariantCulture)) // Convert decimal to string using CultureInfo.InvariantCulture  
                             ));
                         }
                     }
                     System.Windows.MessageBox.Show($"Xuất CSV Tổng Hợp thành công: {sfd.FileName}", "Hoàn tất");
                 }
-                catch (Exception ex) { System.Windows.MessageBox.Show($"Lỗi xuất CSV Tổng Hợp: {ex.Message}", "Lỗi"); }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Lỗi xuất CSV Tổng Hợp: {ex.Message}", "Lỗi");
+                }
             }
         }
 
@@ -1029,18 +1069,18 @@ namespace HoaDonDienTu
                         int row = 2;
                         foreach (var item in invoiceSummaryList)
                         {
-                            ws.Cells[row, 1].Value = item.STT;
-                            ws.Cells[row, 2].Value = item.NgayHD;
-                            ws.Cells[row, 3].Value = item.MST;
-                            ws.Cells[row, 4].Value = item.TenDV;
-                            ws.Cells[row, 5].Value = item.KyHieu;
-                            ws.Cells[row, 6].Value = item.SoHD;
-                            ws.Cells[row, 7].Value = item.TrangThai;
-                            if (decimal.TryParse(item.TongTien?.Replace(".", "").Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal val))
-                            { ws.Cells[row, 8].Value = val; }
-                            else { ws.Cells[row, 8].Value = item.TongTien; }
-                            ws.Cells[row, 8].Style.Numberformat.Format = "#,##0";
-                            row++;
+                            //ws.Cells[row, 1].Value = item.STT;
+                            //ws.Cells[row, 2].Value = item.NgayHD;
+                            //ws.Cells[row, 3].Value = item.MST;
+                            //ws.Cells[row, 4].Value = item.TenDV;
+                            //ws.Cells[row, 5].Value = item.KyHieu;
+                            //ws.Cells[row, 6].Value = item.SoHD;
+                            //ws.Cells[row, 7].Value = item.TrangThai;
+                            //if (decimal.TryParse(item.TongTien?.Replace(".", "").Replace(",", "."), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal val))
+                            //{ ws.Cells[row, 8].Value = val; }
+                            //else { ws.Cells[row, 8].Value = item.TongTien; }
+                            //ws.Cells[row, 8].Style.Numberformat.Format = "#,##0";
+                            //row++;
                         }
                         ws.Cells[ws.Dimension.Address].AutoFitColumns();
                         package.SaveAs(new FileInfo(sfd.FileName));
