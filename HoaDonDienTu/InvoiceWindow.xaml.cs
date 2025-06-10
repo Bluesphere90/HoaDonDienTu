@@ -21,7 +21,8 @@ using OfficeOpenXml;         // For EPPlus
 using OfficeOpenXml.Style;    // For EPPlus Style
 using System.Drawing;         // For System.Drawing.Color (EPPlus)
 using System.Xml.Linq;
-using System.Text.Json;      // For XDocument, XElement (XML Export)
+using System.Text.Json;
+using System.Text.Json.Serialization;      // For XDocument, XElement (XML Export)
 
 
 
@@ -204,6 +205,13 @@ namespace HoaDonDienTu
         }
         private async void btnTaiHoaDon_Click(object sender, RoutedEventArgs e)
         {
+            // Debug: Kiểm tra binding
+            Debug.WriteLine($"=== DEBUG: btnTaiHoaDon_Click bắt đầu ===");
+            Debug.WriteLine($"invoiceSummaryList null? {invoiceSummaryList == null}");
+            Debug.WriteLine($"dgTongHop.ItemsSource null? {dgTongHop.ItemsSource == null}");
+            Debug.WriteLine($"dgTongHop.ItemsSource == invoiceSummaryList? {dgTongHop.ItemsSource == invoiceSummaryList}");
+            Debug.WriteLine($"invoiceSummaryList.Count hiện tại: {invoiceSummaryList?.Count ?? -1}");
+
             if (lblSaiNgay.Visibility == Visibility.Visible)
             {
                 System.Windows.MessageBox.Show("Khoảng thời gian không hợp lệ. Vui lòng kiểm tra lại!", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning); return;
@@ -220,12 +228,15 @@ namespace HoaDonDienTu
             }
             if (clearOldData)
             {
+                Debug.WriteLine("=== Xóa dữ liệu cũ ===");
                 invoiceSummaryList.Clear();
                 invoiceDetailList.Clear();
                 xmlFileList.Clear();
+                Debug.WriteLine($"Sau khi clear: invoiceSummaryList.Count = {invoiceSummaryList.Count}");
             }
 
             bool isBackground = chkBackgroundMode.IsChecked == true;
+            Debug.WriteLine($"=== Bắt đầu DownloadInvoicesAsync, Background = {isBackground} ===");
 
             await DownloadInvoicesAsync(isBackground);
         }
@@ -251,6 +262,7 @@ namespace HoaDonDienTu
         {
             try
             {
+                Debug.WriteLine("=== DownloadInvoicesAsync bắt đầu ===");
                 lblStatus.Text = "Đang tải dữ liệu...";
                 btnTaiHoaDon.IsEnabled = false;
                 btnOpenExportMenu.IsEnabled = false;
@@ -260,6 +272,10 @@ namespace HoaDonDienTu
                 string tthai = (string)cboTTHD.SelectedValue;
                 string ttxly = (string)cboKQKT.SelectedValue;
 
+                Debug.WriteLine($"Khoảng thời gian: {tuNgay:dd/MM/yyyy} - {denNgay:dd/MM/yyyy}");
+                Debug.WriteLine($"Trạng thái HĐ: {tthai}, Kết quả kiểm tra: {ttxly}");
+                Debug.WriteLine($"Loại tìm kiếm: {(isMuaVao ? "Mua vào" : "Bán ra")}");
+
                 var datePeriods = SplitDateRange(tuNgay, denNgay);
                 List<InvoiceIdentifier> invoiceIdentifiers = new List<InvoiceIdentifier>();
                 var stopwatch = Stopwatch.StartNew();
@@ -267,6 +283,12 @@ namespace HoaDonDienTu
                 // 1. Tải danh sách hóa đơn tổng hợp
                 bool shouldDisplaySummary = chkTH.IsChecked == true;
                 bool needToFetchIdentifiers = chkTH.IsChecked == true || chkCT.IsChecked == true || chkXmlZip.IsChecked == true;
+
+                Debug.WriteLine($"shouldDisplaySummary: {shouldDisplaySummary}");
+                Debug.WriteLine($"needToFetchIdentifiers: {needToFetchIdentifiers}");
+                Debug.WriteLine($"chkTH.IsChecked: {chkTH.IsChecked}");
+                Debug.WriteLine($"chkCT.IsChecked: {chkCT.IsChecked}");
+                Debug.WriteLine($"chkXmlZip.IsChecked: {chkXmlZip.IsChecked}");
 
                 if (needToFetchIdentifiers)
                 {
@@ -278,9 +300,13 @@ namespace HoaDonDienTu
                     {
                         System.Windows.Application.Current.Dispatcher.Invoke(() => lblStatus.Text = "Đang tìm kiếm hóa đơn để xử lý...");
                     }
+                    
+                    Debug.WriteLine($"Số periods: {datePeriods.Count}");
 
                     foreach (var period in datePeriods)
                     {
+                        Debug.WriteLine($"Xử lý period: {period.Item1:dd/MM/yyyy} - {period.Item2:dd/MM/yyyy}");
+
                         string baseUrl = isMuaVao ? "https://hoadondientu.gdt.gov.vn:30000/query/invoices/purchase"
                                                   : "https://hoadondientu.gdt.gov.vn:30000/query/invoices/sold";
                         string baseUrlSco = isMuaVao ? "https://hoadondientu.gdt.gov.vn:30000/sco-query/invoices/purchase"
@@ -293,49 +319,39 @@ namespace HoaDonDienTu
                         int size = 50;
 
                         string urlQuery = $"{baseUrl}?sort={sort}&size={size}&search={search}";
-                        // SỬA Ở ĐÂY: silentMode là !shouldDisplaySummary
+                        string urlScoQuery = $"{baseUrlSco}?sort={sort}&size={size}&search={search}";
+
+                        Debug.WriteLine($"URL Query: {urlQuery}");
+                        Debug.WriteLine($"URL SCO Query: {urlScoQuery}");
+
+                        Debug.WriteLine($"Trước khi gọi GetInvoiceSummariesAsync (Query), invoiceSummaryList.Count = {invoiceSummaryList.Count}");
                         await GetInvoiceSummariesAsync(urlQuery, invoiceIdentifiers, invoiceSummaryList.Count, false, !shouldDisplaySummary);
+                        Debug.WriteLine($"Sau khi gọi GetInvoiceSummariesAsync (Query), invoiceSummaryList.Count = {invoiceSummaryList.Count}");
                         await System.Windows.Threading.Dispatcher.Yield();
 
-                        string urlScoQuery = $"{baseUrlSco}?sort={sort}&size={size}&search={search}";
-                        // SỬA Ở ĐÂY: silentMode là !shouldDisplaySummary
+                        Debug.WriteLine($"Trước khi gọi GetInvoiceSummariesAsync (SCO), invoiceSummaryList.Count = {invoiceSummaryList.Count}");
                         await GetInvoiceSummariesAsync(urlScoQuery, invoiceIdentifiers, invoiceSummaryList.Count, true, !shouldDisplaySummary);
+                        Debug.WriteLine($"Sau khi gọi GetInvoiceSummariesAsync (SCO), invoiceSummaryList.Count = {invoiceSummaryList.Count}");
                         await System.Windows.Threading.Dispatcher.Yield();
                     }
-                }
-                else // Nếu không chọn tải tổng hợp, nhưng chọn tải chi tiết hoặc XML, vẫn cần invoiceIdentifiers
-                {
-                    // Nếu người dùng không muốn xem danh sách tổng hợp nhưng vẫn muốn tải chi tiết/XML
-                    // thì vẫn phải ngầm lấy invoiceIdentifiers.
-                    // Bạn có thể thêm 1 thông báo ở đây hoặc để nó chạy ngầm.
-                    // Để đơn giản, nếu chkTH không check, thì chỉ khi chkCT hoặc chkXmlZip check thì mới chạy lấy identifiers.
-                    if (chkCT.IsChecked == true || chkXmlZip.IsChecked == true)
+
+                    // Debug: Kiểm tra số lượng dữ liệu sau khi tải
+                    Debug.WriteLine($"=== Kết thúc việc tải summary ===");
+                    Debug.WriteLine($"Tổng hóa đơn tìm thấy: {invoiceIdentifiers.Count}");
+
+                    if (shouldDisplaySummary)
                     {
-                        System.Windows.Application.Current.Dispatcher.Invoke(() => lblStatus.Text = "Đang tìm kiếm hóa đơn để xử lý...");
-                        foreach (var period in datePeriods)
+                        Debug.WriteLine($"Số dòng trong invoiceSummaryList: {invoiceSummaryList.Count}");
+                        Debug.WriteLine($"dgTongHop.Items.Count: {dgTongHop.Items.Count}");
+
+                        // Kiểm tra một vài item đầu tiên
+                        for (int i = 0; i < Math.Min(3, invoiceSummaryList.Count); i++)
                         {
-                            string baseUrl = isMuaVao ? "https://hoadondientu.gdt.gov.vn:30000/query/invoices/purchase"
-                                                      : "https://hoadondientu.gdt.gov.vn:30000/query/invoices/sold";
-                            string baseUrlSco = isMuaVao ? "https://hoadondientu.gdt.gov.vn:30000/sco-query/invoices/purchase"
-                                                         : "https://hoadondientu.gdt.gov.vn:30000/sco-query/invoices/sold";
-                            string search = $"tdlap=ge={period.Item1:dd/MM/yyyy}T00:00:00;tdlap=le={period.Item2:dd/MM/yyyy}T23:59:59";
-                            if (tthai != "All") search += $";tthai=={tthai}";
-                            if (ttxly != "All") search += $";ttxly=={ttxly}";
-                            string sort = "tdlap:asc,khmshdon:asc,shdon:asc";
-                            int size = 50;
-
-                            string urlQuery = $"{baseUrl}?sort={sort}&size={size}&search={search}";
-                            // Gọi GetInvoiceSummariesAsync nhưng không hiển thị lên dgTongHop (tạm thời vẫn hiển thị, cần sửa GetInvoiceSummariesAsync nếu muốn chạy ngầm hoàn toàn)
-                            await GetInvoiceSummariesAsync(urlQuery, invoiceIdentifiers, invoiceSummaryList.Count, false, true); // silent = true
-                            await System.Windows.Threading.Dispatcher.Yield();
-
-                            string urlScoQuery = $"{baseUrlSco}?sort={sort}&size={size}&search={search}";
-                            await GetInvoiceSummariesAsync(urlScoQuery, invoiceIdentifiers, invoiceSummaryList.Count, true, true); // silent = true
-                            await System.Windows.Threading.Dispatcher.Yield();
+                            var item = invoiceSummaryList[i];
+                            Debug.WriteLine($"Item {i}: STT={item.STT}, SoHD={item.SoHD}, TenNguoiBan={item.TenNguoiBan}");
                         }
                     }
                 }
-
 
                 // 2. Tải chi tiết hóa đơn
                 if (chkCT.IsChecked == true && invoiceIdentifiers.Any())
@@ -390,10 +406,18 @@ namespace HoaDonDienTu
                 stopwatch.Stop();
                 TimeSpan elapsed = stopwatch.Elapsed;
                 System.Windows.Application.Current.Dispatcher.Invoke(() => lblStatus.Text = $"Hoàn thành. Thời gian xử lý: {elapsed:hh\\:mm\\:ss}");
+
+                Debug.WriteLine($"=== Kết thúc DownloadInvoicesAsync ===");
+                Debug.WriteLine($"invoiceSummaryList.Count cuối cùng: {invoiceSummaryList.Count}");
+                Debug.WriteLine($"dgTongHop.Items.Count cuối cùng: {dgTongHop.Items.Count}");
+
                 System.Windows.MessageBox.Show("Tải hóa đơn hoàn tất!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"LỖI DownloadInvoicesAsync: {ex.Message}");
+                Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+
                 System.Windows.MessageBox.Show($"Lỗi khi tải hóa đơn: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
                 System.Windows.Application.Current.Dispatcher.Invoke(() => lblStatus.Text = "Đã xảy ra lỗi khi tải hóa đơn");
                 Debug.WriteLine($"Lỗi DownloadInvoicesAsync: {ex.ToString()}");
@@ -419,13 +443,24 @@ namespace HoaDonDienTu
         }
         private async Task GetInvoiceSummariesAsync(string initialUrl, List<InvoiceIdentifier> invoiceIdentifiers, int startIndex, bool isScoQuery = false, bool silentMode = false)
         {
+            Debug.WriteLine($"=== GetInvoiceSummariesAsync bắt đầu ===");
+            Debug.WriteLine($"URL: {initialUrl}");
+            Debug.WriteLine($"isScoQuery: {isScoQuery}, silentMode: {silentMode}");
+            Debug.WriteLine($"startIndex: {startIndex}");
+
             string currentUrl = initialUrl;
             int currentIndex = startIndex;
+            int pageCount = 0;
+
             try
             {
                 while (!string.IsNullOrEmpty(currentUrl))
                 {
+                    pageCount++;
+                    Debug.WriteLine($"--- Trang {pageCount}, URL: {currentUrl} ---");
+
                     var response = await client.GetAsync(currentUrl);
+                    Debug.WriteLine($"Response Status: {response.StatusCode}");
 
                     // --- BẮT ĐẦU CODE GHI FILE TXT ---
                     string responseContentForLog = "ERROR_READING_CONTENT"; // Giá trị mặc định nếu không đọc được
@@ -487,36 +522,48 @@ namespace HoaDonDienTu
                     }
                     // --- KẾT THÚC CODE GHI FILE TXT ---
 
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Debug.WriteLine($"Lỗi API (Summaries) {response.StatusCode}: {currentUrl}");
+                        break;
+                    }
 
-
-                    if (!response.IsSuccessStatusCode) { Debug.WriteLine($"Lỗi API (Summaries) {response.StatusCode}: {currentUrl}"); break; }
-
-                    var content = await response.Content.ReadAsStringAsync();
+                    // SỬA LỖI: Sử dụng responseContentForLog thay vì đọc lại content
                     var options = new JsonSerializerOptions
                     {
-                        PropertyNameCaseInsensitive = true
+                        PropertyNameCaseInsensitive = true,
+                        WriteIndented = true,
+                        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                        NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString, // Allow số dạng string
+                        UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode // Ignore unknown fields
                     };
-                    var result = System.Text.Json.JsonSerializer.Deserialize<InvoiceQueryResult>(content);
+
+                    var result = System.Text.Json.JsonSerializer.Deserialize<InvoiceQueryResult>(responseContentForLog, options);
 
                     if (result?.Datas != null && result.Datas.Any())
                     {
                         foreach (var invoiceData in result.Datas)
                         {
                             currentIndex++;
+
+                            // SỬA LỖI: Luôn thêm vào invoiceIdentifiers (cần cho việc tải chi tiết và XML)
+                            invoiceIdentifiers.Add(new InvoiceIdentifier
+                            {
+                                Nbmst = invoiceData.nbmst,
+                                Khhdon = invoiceData.khhdon,
+                                Shdon = invoiceData.shdon,
+                                Khmshdon = invoiceData.khmshdon,
+                                IsScoQuery = isScoQuery,
+                                Tdlap = invoiceData.tdlap
+                            });
+
+                            // SỬA LỖI: Chỉ hiển thị lên giao diện nếu không phải chế độ silent
                             if (!silentMode)
                             {
                                 var summary = new InvoiceSummary
                                 {
-                                    //STT = currentIndex,
-                                    //NgayHD = FormatHelper.FormatInvoiceDate(invoiceData.Tdlap),
-                                    //MST = invoiceData.Nbmst,
-                                    //TenDV = invoiceData.Nban,
-                                    //KyHieu = invoiceData.Khhdon,
-                                    //SoHD = invoiceData.Shdon,
-                                    //TrangThai = FormatHelper.GetInvoiceStatusDescription(invoiceData.Tthai),
-                                    //TongTien = FormatHelper.FormatCurrencyFromString(invoiceData.Tgtttbso)
-
                                     STT = currentIndex,
+                                    id = invoiceData.id,
                                     TenHoaDon = invoiceData.tlhdon,
                                     MauHoaDon = invoiceData.khmshdon,
                                     KyHieu = invoiceData.khhdon,
@@ -532,25 +579,21 @@ namespace HoaDonDienTu
                                     DiaChiNguoiMua = invoiceData.nmdchi,
                                     TongTienChuaThue = invoiceData.tgtcthue,
                                     TongTienThue = invoiceData.tgtthue,
-                                    TrangThai = Helper.FormatHelper.GetInvoiceStatusDescription(invoiceData.tthai),
-                                    KetQuaKiemTraHoaDon = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(invoiceData.ttxly),
-
+                                    TrangThai = Helper.FormatHelper.GetInvoiceStatusDescription(invoiceData.tthai?.ToString()),
+                                    KetQuaKiemTraHoaDon = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(invoiceData.ttxly?.ToString()),
                                 };
-                                
-                                System.Windows.Application.Current.Dispatcher.Invoke(() => invoiceSummaryList.Add(summary));
+
+                                // SỬA LỖI: Debug để kiểm tra dữ liệu được tạo
+                                Debug.WriteLine($"Tạo summary: STT={summary.STT}, SoHD={summary.SoHD}, TenNguoiBan={summary.TenNguoiBan}");
+
+                                System.Windows.Application.Current.Dispatcher.Invoke(() => {
+                                    invoiceSummaryList.Add(summary);
+                                    Debug.WriteLine($"Đã thêm vào invoiceSummaryList, tổng: {invoiceSummaryList.Count}");
+                                });
                             }
-                            
-                            
-                            invoiceIdentifiers.Add(new InvoiceIdentifier
-                            {
-                                Nbmst = invoiceData.nbmst,
-                                Khhdon = invoiceData.khhdon,
-                                Shdon = invoiceData.shdon,
-                                Khmshdon = invoiceData.khmshdon,
-                                IsScoQuery = isScoQuery,
-                                Tdlap = invoiceData.tdlap
-                            });
                         }
+
+                        // Xử lý phân trang
                         if (!string.IsNullOrEmpty(result.State))
                         {
                             Uri baseUri = new Uri(currentUrl.Contains("?") ? currentUrl.Substring(0, currentUrl.IndexOf('?')) : currentUrl);
@@ -558,12 +601,23 @@ namespace HoaDonDienTu
                             queryParams["state"] = result.State;
                             currentUrl = $"{baseUri}?{queryParams}";
                         }
-                        else { currentUrl = string.Empty; }
+                        else
+                        {
+                            currentUrl = string.Empty;
+                        }
                     }
-                    else { currentUrl = string.Empty; }
+                    else
+                    {
+                        Debug.WriteLine($"Không có dữ liệu hoặc dữ liệu rỗng từ URL: {currentUrl}");
+                        currentUrl = string.Empty;
+                    }
                 }
             }
-            catch (Exception ex) { Debug.WriteLine($"Lỗi GetInvoiceSummariesAsync từ {initialUrl}: {ex.Message}"); }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi GetInvoiceSummariesAsync từ {initialUrl}: {ex.Message}");
+                Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+            }
         }
         private async Task GetInvoiceDetailsAsync(InvoiceIdentifier invoiceIdentity, bool isBackgroundMode = false)
         {

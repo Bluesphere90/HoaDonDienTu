@@ -198,6 +198,7 @@
                           AlternatingRowBackground="LightBlue" RowHeaderWidth="0">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="STT" Binding="{Binding STT}" Width="30"/>
+                        <DataGridTextColumn Header="ID" Binding="{Binding id}" Width="70"/>
                         <DataGridTextColumn Header="Tên HĐ" Binding="{Binding TenHoaDon}" Width="70"/>
                         <DataGridTextColumn Header="Mẫu HĐ" Binding="{Binding MauHoaDon}" Width="70"/>
                         <DataGridTextColumn Header="Ký hiệu HĐ" Binding="{Binding KyHieu}" Width="50"/>

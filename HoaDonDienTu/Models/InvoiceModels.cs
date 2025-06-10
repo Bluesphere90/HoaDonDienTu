@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization; // Thêm cho CultureInfo
 using System.Text.Json.Serialization;
 using HoaDonDienTu.Helper;
-using Newtonsoft.Json;
 
 namespace HoaDonDienTu.Models
 {
@@ -13,10 +12,10 @@ namespace HoaDonDienTu.Models
     // =========================================================================
     public class InvoiceQueryResult
     {
-        [JsonProperty("datas")]
+        [JsonPropertyName("datas")]
         public List<InvoiceSummaryData> Datas { get; set; }
 
-        [JsonProperty("state")]
+        [JsonPropertyName("state")]
         public string State { get; set; }
 
         public InvoiceQueryResult() // Constructor
@@ -181,41 +180,38 @@ namespace HoaDonDienTu.Models
         public string pban { get; set; }
 
         [JsonPropertyName("ptgui")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string ptgui { get; set; }
 
         [JsonPropertyName("shdgoc")]
         public string shdgoc { get; set; }
 
         [JsonPropertyName("tchat")]
-        public string tchat { get; set; }
+        public object tchat { get; set; }
 
         [JsonPropertyName("tdlap")]
         public string tdlap { get; set; }
 
         [JsonPropertyName("tgia")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
         public decimal? tgia { get; set; }
 
         [JsonPropertyName("tgtcthue")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
         public decimal? tgtcthue { get; set; }
 
         [JsonPropertyName("tgtthue")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
         public decimal? tgtthue { get; set; }
 
         [JsonPropertyName("tgtttbchu")]
         public string tgtttbchu { get; set; }
 
         [JsonPropertyName("tgtttbso")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
         public decimal? tgtttbso { get; set; }
 
         [JsonPropertyName("thdon")]
         public string thdon { get; set; }
 
         [JsonPropertyName("thlap")]
-        public string thlap { get; set; }
+        public object thlap { get; set; }
 
         [JsonPropertyName("thttlphi")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
@@ -229,25 +225,24 @@ namespace HoaDonDienTu.Models
         public string tlhdon { get; set; }
 
         [JsonPropertyName("ttcktmai")]
-        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleDecimalConverter))]
         public decimal? ttcktmai { get; set; }
 
         [JsonPropertyName("tthai")]
-        public string tthai { get; set; }
+        public object tthai { get; set; }
 
         [JsonPropertyName("ttkhac")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
         public string ttkhac { get; set; }
 
         [JsonPropertyName("tttbao")]
-        public string tttbao { get; set; }
+        public object tttbao { get; set; }
 
         [JsonPropertyName("ttttkhac")]
         [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringConverter))]
         public string ttttkhac { get; set; }
 
         [JsonPropertyName("ttxly")]
-        public string ttxly { get; set; }
+        public object ttxly { get; set; }
 
         [JsonPropertyName("tvandnkntt")]
         public string tvandnkntt { get; set; }
@@ -256,7 +251,7 @@ namespace HoaDonDienTu.Models
         public string mhso { get; set; }
 
         [JsonPropertyName("ladhddt")]
-        public string ladhddt { get; set; }
+        public object ladhddt { get; set; }
 
         [JsonPropertyName("mkhang")]
         public string mkhang { get; set; }
@@ -291,7 +286,7 @@ namespace HoaDonDienTu.Models
         public string nmcks { get; set; }
 
         [JsonPropertyName("bhphap")]
-        public string bhphap { get; set; }
+        public object bhphap { get; set; }
 
         [JsonPropertyName("hddunlap")]
         public string hddunlap { get; set; }
@@ -455,6 +450,7 @@ namespace HoaDonDienTu.Models
     public class InvoiceSummary // Model cho DataGrid dgTongHop
     {
         public int STT { get; set; }
+        public string id { get; set; } // ID của hóa đơn
         public string TenHoaDon { get; set; } // Tên hóa đơn, ví dụ: "Hóa đơn GTGT", "Hóa đơn bán hàng"
         public string MauHoaDon { get; set; } // Mã mẫu hóa đơn
         public string KyHieu { get; set; }
@@ -482,272 +478,278 @@ namespace HoaDonDienTu.Models
     // Model để deserialize JSON response đầy đủ từ API chi tiết hóa đơn
     public class InvoiceDetailApiResponse
     {
-        [JsonProperty("nbmst")]
+        [JsonPropertyName("nbmst")]
         public string ApiMaSoThueNguoiBan { get; set; }
-        [JsonProperty("khmshdon")]
+        [JsonPropertyName("khmshdon")]
         public string ApiMauSoHoaDon { get; set; }
-        [JsonProperty("khhdon")]
+        [JsonPropertyName("khhdon")]
         public string ApiKyHieuHoaDon { get; set; }
-        [JsonProperty("shdon")]
+        [JsonPropertyName("shdon")]
         public string ApiSoHoaDon { get; set; }
-        [JsonProperty("cqt")]
+        [JsonPropertyName("cqt")]
         public string Apicqt { get; set; }
-        [JsonProperty("cttkhac")]
+        [JsonPropertyName("cttkhac")]
         public string ApiThongTinKhac { get; set; }
-        [JsonProperty("dvtte")]
+        [JsonPropertyName("dvtte")]
         public string ApiDonViTienTe { get; set; }
-        [JsonProperty("hdon")]
+        [JsonPropertyName("hdon")]
         public string Apihdon { get; set; }
-        [JsonProperty("hsgcma")]
+        [JsonPropertyName("hsgcma")]
         public string Apihsgcma { get; set; }
-        [JsonProperty("hsgoc")]
+        [JsonPropertyName("hsgoc")]
         public string Apihsgoc { get; set; }
-        [JsonProperty("hthdon")]
+        [JsonPropertyName("hthdon")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string Apihthdon { get; set; }
-        [JsonProperty("htttoan")]
+        [JsonPropertyName("htttoan")]
         public string ApiHinhThucThanhToanCode { get; set; }
-        [JsonProperty("id")]
+        [JsonPropertyName("id")]
         public string Apiid { get; set; }
-        [JsonProperty("idtbao")]
+        [JsonPropertyName("idtbao")]
         public string Apiidtbao { get; set; }
-        [JsonProperty("khdon")]
+        [JsonPropertyName("khdon")]
         public string Apikhdon { get; set; }
-        [JsonProperty("khhdgoc")]
+        [JsonPropertyName("khhdgoc")]
         public string Apikhhdgoc { get; set; }
-        [JsonProperty("khmshdgoc")]
+        [JsonPropertyName("khmshdgoc")]
         public string Apikhmshdgoc { get; set; }
-        [JsonProperty("lhdgoc")]
+        [JsonPropertyName("lhdgoc")]
         public string Apilhdgoc { get; set; }
-        [JsonProperty("mhdon")]
+        [JsonPropertyName("mhdon")]
         public string ApiMaCQT { get; set; }
-        [JsonProperty("mtdiep")]
+        [JsonPropertyName("mtdiep")]
         public string Apimtdiep { get; set; }
-        [JsonProperty("mtdtchieu")]
+        [JsonPropertyName("mtdtchieu")]
         public string Apimtdtchieu { get; set; }
-        [JsonProperty("nbdchi")]
+        [JsonPropertyName("nbdchi")]
         public string ApiDiaChiNguoiBan { get; set; }
-        [JsonProperty("chma")]
+        [JsonPropertyName("chma")]
         public string Apichma { get; set; }
-        [JsonProperty("chten")]
+        [JsonPropertyName("chten")]
         public string Apichten { get; set; }
-        [JsonProperty("nbhdktngay")]
+        [JsonPropertyName("nbhdktngay")]
         public string Apinbhdktngay { get; set; }
-        [JsonProperty("nbhdktso")]
+        [JsonPropertyName("nbhdktso")]
         public string Apinbhdktso { get; set; }
-        [JsonProperty("nbhdso")]
+        [JsonPropertyName("nbhdso")]
         public string Apinbhdso { get; set; }
-        [JsonProperty("nblddnbo")]
+        [JsonPropertyName("nblddnbo")]
         public string Apinblddnbo { get; set; }
-        [JsonProperty("nbptvchuyen")]
+        [JsonPropertyName("nbptvchuyen")]
         public string Apinbptvchuyen { get; set; }
-        [JsonProperty("nbstkhoan")]
+        [JsonPropertyName("nbstkhoan")]
         public string Apinbstkhoan { get; set; }
-        [JsonProperty("nbten")]
+        [JsonPropertyName("nbten")]
         public string ApiTenNguoiBan { get; set; }
-        [JsonProperty("nbtnhang")]
+        [JsonPropertyName("nbtnhang")]
         public string Apinbtnhang { get; set; }
-        [JsonProperty("nbtnvchuyen")]
+        [JsonPropertyName("nbtnvchuyen")]
         public string Apinbtnvchuyen { get; set; }
-        [JsonProperty("nbttkhac")]
+        [JsonPropertyName("nbttkhac")]
         public string Apinbttkhac { get; set; }
-        [JsonProperty("ncma")]
+        [JsonPropertyName("ncma")]
         public string Apincma { get; set; }
-        [JsonProperty("ncnhat")]
+        [JsonPropertyName("ncnhat")]
         public string Apincnhat { get; set; }
-        [JsonProperty("ngcnhat")]
+        [JsonPropertyName("ngcnhat")]
         public string Apingcnhat { get; set; }
-        [JsonProperty("nky")]
+        [JsonPropertyName("nky")]
         public string ApiNgayKyISO { get; set; }
-        [JsonProperty("nmdchi")]
+        [JsonPropertyName("nmdchi")]
         public string ApiDiaChiNguoiMua { get; set; }
-        [JsonProperty("nmmst")]
+        [JsonPropertyName("nmmst")]
         public string ApiMaSoThueNguoiMua { get; set; }
-        [JsonProperty("nmstkhoan")]
+        [JsonPropertyName("nmstkhoan")]
         public string Apinmstkhoan { get; set; }
-        [JsonProperty("nmten")]
+        [JsonPropertyName("nmten")]
         public string ApiTenNguoiMua { get; set; }
-        [JsonProperty("nmtnhang")]
+        [JsonPropertyName("nmtnhang")]
         public string Apinmtnhang { get; set; }
-        [JsonProperty("nmtnmua")]
+        [JsonPropertyName("nmtnmua")]
         public string Apinmtnmua { get; set; }
-        [JsonProperty("nmttkhac")]
+        [JsonPropertyName("nmttkhac")]
         public string Apinmttkhac { get; set; }
-        [JsonProperty("ntao")]
+        [JsonPropertyName("ntao")]
         public string Apintao { get; set; }
-        [JsonProperty("ntnhan")]
+        [JsonPropertyName("ntnhan")]
         public string Apintnhan { get; set; }
-        [JsonProperty("pban")]
+        [JsonPropertyName("pban")]
         public string Apipban { get; set; }
-        [JsonProperty("ptgui")]
+        [JsonPropertyName("ptgui")]
         public string Apiptgui { get; set; }
-        [JsonProperty("shdgoc")]
+        [JsonPropertyName("shdgoc")]
         public string Apishdgoc { get; set; }
-        [JsonProperty("tchat")]
+        [JsonPropertyName("tchat")]
         public string Apitchat { get; set; }
-        [JsonProperty("tdlap")]
+        [JsonPropertyName("tdlap")]
         public string ApiNgayLapHoaDonISO { get; set; }
-        [JsonProperty("tgia")]
+        [JsonPropertyName("tgia")]
         public decimal? ApiTyGia { get; set; }
-        [JsonProperty("tgtcthue")]
+        [JsonPropertyName("tgtcthue")]
         public decimal? ApiTongTienChuaThue { get; set; }
-        [JsonProperty("tgtthue")]
+        [JsonPropertyName("tgtthue")]
         public decimal? ApiTongTienThue { get; set; }
-        [JsonProperty("tgtttbchu")]
+        [JsonPropertyName("tgtttbchu")]
         public string ApiTongTienThanhToanBangChu { get; set; }
-        [JsonProperty("tgtttbso")]
+        [JsonPropertyName("tgtttbso")]
         public decimal? ApiTongTienThanhToan { get; set; }
-        [JsonProperty("thdon")]
+        [JsonPropertyName("thdon")]
         public string Apithdon { get; set; }
-        [JsonProperty("thlap")]
+        [JsonPropertyName("thlap")]
         public string Apithlap { get; set; }
-        [JsonProperty("thttlphi")]
+        [JsonPropertyName("thttlphi")]
         public string Apithttlphi { get; set; }
-        [JsonProperty("thttltsuat")]
+        [JsonPropertyName("thttltsuat")]
         public string Apithttltsuat { get; set; }
-        [JsonProperty("tlhdon")]
+        [JsonPropertyName("tlhdon")]
         public string ApiLoaiHoaDon { get; set; }
-        [JsonProperty("ttcktmai")]
+        [JsonPropertyName("ttcktmai")]
         public decimal? ApiTongTienChietKhauTM { get; set; }
-        [JsonProperty("tthai")]
+        [JsonPropertyName("tthai")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string ApiTrangThaiHD_Code { get; set; }
-        [JsonProperty("ttkhac")]
+        [JsonPropertyName("ttkhac")]
         public string Apittkhac { get; set; }
-        [JsonProperty("tttbao")]
+        [JsonPropertyName("tttbao")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string Apitttbao { get; set; }
-        [JsonProperty("ttttkhac")]
+        [JsonPropertyName("ttttkhac")]
         public string Apittttkhac { get; set; }
-        [JsonProperty("ttxly")]
+        [JsonPropertyName("ttxly")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string ApiTinhTrangXuLy_Code { get; set; }
-        [JsonProperty("tvandnkntt")]
+        [JsonPropertyName("tvandnkntt")]
         public string Apitvandnkntt { get; set; }
-        [JsonProperty("mhso")]
+        [JsonPropertyName("mhso")]
         public string Apimhso { get; set; }
-        [JsonProperty("ladhddt")]
+        [JsonPropertyName("ladhddt")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string Apiladhddt { get; set; }
-        [JsonProperty("mkhang")]
+        [JsonPropertyName("mkhang")]
         public string Apimkhang { get; set; }
-        [JsonProperty("nbsdthoai")]
+        [JsonPropertyName("nbsdthoai")]
         public string Apinbsdthoai { get; set; }
-        [JsonProperty("nbdctdtu")]
+        [JsonPropertyName("nbdctdtu")]
         public string Apinbdctdtu { get; set; }
-        [JsonProperty("nbfax")]
+        [JsonPropertyName("nbfax")]
         public string Apinbfax { get; set; }
-        [JsonProperty("nbwebsite")]
+        [JsonPropertyName("nbwebsite")]
         public string Apinbwebsite { get; set; }
-        [JsonProperty("nbcks")]
+        [JsonPropertyName("nbcks")]
         public string Apinbcks { get; set; }
-        [JsonProperty("nmsdthoai")]
+        [JsonPropertyName("nmsdthoai")]
         public string Apinmsdthoai { get; set; }
-        [JsonProperty("nmdctdtu")]
+        [JsonPropertyName("nmdctdtu")]
         public string Apinmdctdtu { get; set; }
-        [JsonProperty("nmcmnd")]
+        [JsonPropertyName("nmcmnd")]
         public string Apinmcmnd { get; set; }
-        [JsonProperty("nmcks")]
+        [JsonPropertyName("nmcks")]
         public string Apinmcks { get; set; }
-        [JsonProperty("bhphap")]
+        [JsonPropertyName("bhphap")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string Apibhphap { get; set; }
-        [JsonProperty("hddunlap")]
+        [JsonPropertyName("hddunlap")]
         public string Apihddunlap { get; set; }
-        [JsonProperty("gchdgoc")]
+        [JsonPropertyName("gchdgoc")]
         public string Apigchdgoc { get; set; }
-        [JsonProperty("tbhgtngay")]
+        [JsonPropertyName("tbhgtngay")]
         public string Apitbhgtngay { get; set; }
-        [JsonProperty("bhpldo")]
+        [JsonPropertyName("bhpldo")]
         public string Apibhpldo { get; set; }
-        [JsonProperty("bhpcbo")]
+        [JsonPropertyName("bhpcbo")]
         public string Apibhpcbo { get; set; }
-        [JsonProperty("bhpngay")]
+        [JsonPropertyName("bhpngay")]
         public string Apibhpngay { get; set; }
-        [JsonProperty("tdlhdgoc")]
+        [JsonPropertyName("tdlhdgoc")]
         public string Apitdlhdgoc { get; set; }
-        [JsonProperty("tgtphi")]
+        [JsonPropertyName("tgtphi")]
         public string Apitgtphi { get; set; }
-        [JsonProperty("unhiem")]
+        [JsonPropertyName("unhiem")]
         public string Apiunhiem { get; set; }
-        [JsonProperty("mstdvnunlhdon")]
+        [JsonPropertyName("mstdvnunlhdon")]
         public string Apimstdvnunlhdon { get; set; }
-        [JsonProperty("tdvnunlhdon")]
+        [JsonPropertyName("tdvnunlhdon")]
         public string Apitdvnunlhdon { get; set; }
-        [JsonProperty("nbmdvqhnsach")]
+        [JsonPropertyName("nbmdvqhnsach")]
         public string Apinbmdvqhnsach { get; set; }
-        [JsonProperty("nbsqdinh")]
+        [JsonPropertyName("nbsqdinh")]
         public string Apinbsqdinh { get; set; }
-        [JsonProperty("nbncqdinh")]
+        [JsonPropertyName("nbncqdinh")]
         public string Apinbncqdinh { get; set; }
-        [JsonProperty("nbcqcqdinh")]
+        [JsonPropertyName("nbcqcqdinh")]
         public string Apinbcqcqdinh { get; set; }
-        [JsonProperty("nbhtban")]
+        [JsonPropertyName("nbhtban")]
         public string Apinbhtban { get; set; }
-        [JsonProperty("nmmdvqhnsach")]
+        [JsonPropertyName("nmmdvqhnsach")]
         public string Apinmmdvqhnsach { get; set; }
-        [JsonProperty("nmddvchden")]
+        [JsonPropertyName("nmddvchden")]
         public string Apinmddvchden { get; set; }
-        [JsonProperty("nmtgvchdtu")]
+        [JsonPropertyName("nmtgvchdtu")]
         public string Apinmtgvchdtu { get; set; }
-        [JsonProperty("nmtgvchdden")]
+        [JsonPropertyName("nmtgvchdden")]
         public string Apinmtgvchdden { get; set; }
-        [JsonProperty("nbtnban")]
+        [JsonPropertyName("nbtnban")]
         public string Apinbtnban { get; set; }
-        [JsonProperty("dcdvnunlhdon")]
+        [JsonPropertyName("dcdvnunlhdon")]
         public string Apidcdvnunlhdon { get; set; }
-        [JsonProperty("dksbke")]
+        [JsonPropertyName("dksbke")]
         public string Apidksbke { get; set; }
-        [JsonProperty("dknlbke")]
+        [JsonPropertyName("dknlbke")]
         public string Apidknlbke { get; set; }
-        [JsonProperty("thtttoan")]
+        [JsonPropertyName("thtttoan")]
         public string ApiHinhThucThanhToanText { get; set; }
-        [JsonProperty("msttcgp")]
+        [JsonPropertyName("msttcgp")]
         public string Apimsttcgp { get; set; }
-        [JsonProperty("cqtcks")]
+        [JsonPropertyName("cqtcks")]
         public string Apicqtcks { get; set; }
-        [JsonProperty("gchu")]
+        [JsonPropertyName("gchu")]
         public string Apigchu { get; set; }
-        [JsonProperty("kqcht")]
+        [JsonPropertyName("kqcht")]
         public string Apikqcht { get; set; }
-        [JsonProperty("hdntgia")]
+        [JsonPropertyName("hdntgia")]
         public string Apihdntgia { get; set; }
-        [JsonProperty("tgtkcthue")]
+        [JsonPropertyName("tgtkcthue")]
         public string Apitgtkcthue { get; set; }
-        [JsonProperty("tgtkhac")]
+        [JsonPropertyName("tgtkhac")]
         public string Apitgtkhac { get; set; }
-        [JsonProperty("nmshchieu")]
+        [JsonPropertyName("nmshchieu")]
         public string Apinmshchieu { get; set; }
-        [JsonProperty("nmnchchieu")]
+        [JsonPropertyName("nmnchchieu")]
         public string Apinmnchchieu { get; set; }
-        [JsonProperty("nmnhhhchieu")]
+        [JsonPropertyName("nmnhhhchieu")]
         public string Apinmnhhhchieu { get; set; }
-        [JsonProperty("nmqtich")]
+        [JsonPropertyName("nmqtich")]
         public string Apinmqtich { get; set; }
-        [JsonProperty("ktkhthue")]
+        [JsonPropertyName("ktkhthue")]
         public string Apiktkhthue { get; set; }
-        [JsonProperty("qrcode")]
+        [JsonPropertyName("qrcode")]
         public string Apiqrcode { get; set; }
-        [JsonProperty("ttmstten")]
+        [JsonPropertyName("ttmstten")]
         public string Apittmstten { get; set; }
-        [JsonProperty("ladhddtten")]
+        [JsonPropertyName("ladhddtten")]
         public string Apiladhddtten { get; set; }
-        [JsonProperty("hdxkhau")]
+        [JsonPropertyName("hdxkhau")]
         public string Apihdxkhau { get; set; }
-        [JsonProperty("hdxkptquan")]
+        [JsonPropertyName("hdxkptquan")]
         public string Apihdxkptquan { get; set; }
-        [JsonProperty("hdgktkhthue")]
+        [JsonPropertyName("hdgktkhthue")]
         public string Apihdgktkhthue { get; set; }
-        [JsonProperty("hdonLquans")]
+        [JsonPropertyName("hdonLquans")]
         public string ApihdonLquans { get; set; }
-        [JsonProperty("tthdclquan")]
+        [JsonPropertyName("tthdclquan")]
         public string Apitthdclquan { get; set; }
-        [JsonProperty("pdndungs")]
+        [JsonPropertyName("pdndungs")]
         public string Apipdndungs { get; set; }
-        [JsonProperty("hdtbssrses")]
+        [JsonPropertyName("hdtbssrses")]
         public string Apihdtbssrses { get; set; }
-        [JsonProperty("hdTrung")]
+        [JsonPropertyName("hdTrung")]
         public string ApihdTrung { get; set; }
-        [JsonProperty("isHDTrung")]
+        [JsonPropertyName("isHDTrung")]
         public string ApiisHDTrung { get; set; }
 
 
         // Danh sách các dòng chi tiết hàng hóa/dịch vụ
-        [JsonProperty("hdhhdvu")]
+        [JsonPropertyName("hdhhdvu")]
         public List<InvoiceItemRawData> Hdhhdvu { get; set; }
 
         public InvoiceDetailApiResponse() // Constructor
@@ -759,25 +761,25 @@ namespace HoaDonDienTu.Models
     // Model cho một dòng chi tiết THÔ từ mảng "hdhhdvu" trong JSON
     public class InvoiceItemRawData
     {
-        [JsonProperty("sxep")]
+        [JsonPropertyName("sxep")]
         public int? SoThuTuDongRaw { get; set; }
-        [JsonProperty("ten")]
+        [JsonPropertyName("ten")]
         public string TenHHDVRaw { get; set; }
-        [JsonProperty("dvtinh")]
+        [JsonPropertyName("dvtinh")]
         public string DonViTinhRaw { get; set; }
-        [JsonProperty("sluong")]
+        [JsonPropertyName("sluong")]
         public decimal? SoLuongRaw { get; set; }
-        [JsonProperty("dgia")]
+        [JsonPropertyName("dgia")]
         public decimal? DonGiaRaw { get; set; }
-        [JsonProperty("stckhau")]
+        [JsonPropertyName("stckhau")]
         public decimal? SoTienChietKhauRaw { get; set; }
-        [JsonProperty("ltsuat")]
+        [JsonPropertyName("ltsuat")]
         public string LoaiThueSuatRaw { get; set; }
-        [JsonProperty("tsuat")]
+        [JsonPropertyName("tsuat")]
         public decimal? ThueSuatValueRaw { get; set; } // Thuế suất dạng số (0.1, 0.08)
-        [JsonProperty("thtien")]
+        [JsonPropertyName("thtien")]
         public decimal? ThanhTienChuaThueRaw { get; set; }
-        [JsonProperty("tthue")]
+        [JsonPropertyName("tthue")]
         public decimal? TienThueRaw { get; set; }
 
         // Nếu API có trả về mã hàng hóa trong item, thêm vào đây
