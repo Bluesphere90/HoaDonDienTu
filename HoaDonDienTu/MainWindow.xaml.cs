@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using System.Net;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
+using HoaDonDienTu.Services; // Thêm namespace cho DatabaseService
 
 namespace HoaDonDienTu
 {
@@ -21,6 +22,7 @@ namespace HoaDonDienTu
         private List<UserCredential> savedUsers = new List<UserCredential>();
         private string captchaKey = string.Empty;
         private HttpClient client;
+        private DatabaseService databaseService; // Thêm DatabaseService
 
         public MainWindow()
         {
@@ -29,6 +31,9 @@ namespace HoaDonDienTu
             // Cấu hình HttpClient
             client = new HttpClient();
             client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+
+            // Khởi tạo DatabaseService
+            databaseService = new DatabaseService();
 
             // Nạp danh sách người dùng đã lưu
             LoadSavedUsers();
@@ -61,15 +66,20 @@ namespace HoaDonDienTu
                                 txtPassword.Password : txtPasswordVisible.Text;
 
                 // Gọi API đăng nhập
-                bool success = await LoginAsync(txtUsername.Text, password, txtCaptcha.Text, captchaKey);
+                var loginResult = await LoginAsync(txtUsername.Text, password, txtCaptcha.Text, captchaKey);
 
-                if (success)
+                if (loginResult.Success)
                 {
                     lblThanhCong.Visibility = Visibility.Visible;
                     lblThatBai.Visibility = Visibility.Collapsed;
 
                     // Lưu thông tin đăng nhập
                     SaveUserCredentials(txtUsername.Text, password, lblTenDV.Text);
+
+                    Debug.WriteLine("Bắt đầu khởi tạo db " + loginResult.CompanyTaxCode);
+
+                    // Khởi tạo database cho công ty
+                    await InitializeDatabaseForCompany(loginResult.CompanyTaxCode);
 
                     // Chuyển sang cửa sổ quản lý hóa đơn sau 1 giây
                     await Task.Delay(1000);
@@ -88,7 +98,8 @@ namespace HoaDonDienTu
 
                         try
                         {
-                            InvoiceWindow invoiceWindow = new InvoiceWindow();
+                            // Truyền DatabaseService vào InvoiceWindow
+                            InvoiceWindow invoiceWindow = new InvoiceWindow(databaseService, loginResult.CompanyTaxCode);
                             Debug.WriteLine("Đã khởi tạo InvoiceWindow thành công");
 
                             // Hiển thị cửa sổ
@@ -151,6 +162,245 @@ namespace HoaDonDienTu
                 btnLogin.Content = "ĐĂNG NHẬP";
             }
         }
+
+        // Thêm class để chứa kết quả đăng nhập
+        private class LoginResult
+        {
+            public bool Success { get; set; }
+            public string CompanyTaxCode { get; set; }
+            public string CompanyName { get; set; }
+            public string ErrorMessage { get; set; }
+        }
+
+        private async Task<LoginResult> LoginAsync(string username, string password, string captchaValue, string captchaKey)
+        {
+            try
+            {
+                string url = "https://hoadondientu.gdt.gov.vn:30000/security-taxpayer/authenticate";
+
+                // Tạo dữ liệu đăng nhập
+                var loginData = new
+                {
+                    username = username,
+                    password = password,
+                    cvalue = captchaValue,
+                    ckey = captchaKey
+                };
+
+                // Chuyển đổi thành JSON
+                string jsonData = JsonConvert.SerializeObject(loginData);
+                Debug.WriteLine($"Dữ liệu đăng nhập: {jsonData}");
+
+                // Tạo HttpContent
+                var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+                // Gửi request
+                var response = await client.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Debug.WriteLine($"Kết quả đăng nhập: {responseContent}");
+
+                // Phân tích kết quả
+                var result = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                if (response.IsSuccessStatusCode && result != null)
+                {
+                    // Kiểm tra xem token có tồn tại không
+                    if (result.token != null)
+                    {
+                        // Gán token trực tiếp vào biến static của App
+                        string token = result.token.ToString();
+                        App.AuthToken = token;
+
+                        // Kiểm tra token đã được lưu đúng
+                        Debug.WriteLine($"Token lưu thành công: {(App.AuthToken != null && App.AuthToken.Length > 10 ? App.AuthToken.Substring(0, 10) + "..." : "Invalid Token")}");
+
+                        // Cấu hình header cho HttpClient
+                        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", App.AuthToken);
+
+                        // Lấy thông tin công ty
+                        var companyInfo = await GetCompanyInfo();
+
+                        return new LoginResult
+                        {
+                            Success = true,
+                            CompanyTaxCode = companyInfo.TaxCode,
+                            CompanyName = companyInfo.Name
+                        };
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Token không tồn tại trong kết quả");
+                        return new LoginResult
+                        {
+                            Success = false,
+                            ErrorMessage = "Đăng nhập thành công nhưng không nhận được token"
+                        };
+                    }
+                }
+                else
+                {
+                    string errorMessage = "Đăng nhập thất bại";
+                    if (result != null && result.message != null)
+                    {
+                        errorMessage = result.message.ToString();
+                    }
+                    MessageBox.Show(errorMessage, "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                    return new LoginResult
+                    {
+                        Success = false,
+                        ErrorMessage = errorMessage
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi đăng nhập: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
+
+                return new LoginResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        // Thêm class để chứa thông tin công ty
+        private class CompanyInfo
+        {
+            public string TaxCode { get; set; }
+            public string Name { get; set; }
+        }
+
+        private async Task<CompanyInfo> GetCompanyInfo()
+        {
+            try
+            {
+                // Cấu hình header với token xác thực
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", App.AuthToken);
+
+                // Gọi API lấy thông tin đơn vị
+                var response = await client.GetAsync("https://hoadondientu.gdt.gov.vn:30000/security-taxpayer/profile");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    // THÊM DEBUG ĐỂ XEM API TRẢ VỀ GÌ
+                    Debug.WriteLine("=== PROFILE API RESPONSE ===");
+                    Debug.WriteLine(content);
+                    Debug.WriteLine("============================");
+
+                    var profileData = JsonConvert.DeserializeObject<dynamic>(content);
+
+                    if (profileData != null)
+                    {
+                        string companyName = profileData.name?.ToString() ?? "Không xác định";
+                        string taxCode = profileData.id?.ToString() ??
+                                profileData.groupId?.ToString() ??
+                                profileData.username?.ToString() ??  // Backup: username cũng là MST
+                                "Unknown";
+
+                        lblTenDV.Text = companyName;
+
+                        Debug.WriteLine($"Thông tin công ty - Tên: {companyName}, MST: {taxCode}");
+
+                        return new CompanyInfo
+                        {
+                            TaxCode = taxCode,
+                            Name = companyName
+                        };
+                    }
+                }
+
+                // Fallback nếu không lấy được thông tin
+                return new CompanyInfo
+                {
+                    TaxCode = "DEFAULT_MST",
+                    Name = "Công ty không xác định"
+                };
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi khi lấy thông tin công ty: {ex.Message}");
+                return new CompanyInfo
+                {
+                    TaxCode = "DEFAULT_MST",
+                    Name = "Lỗi lấy thông tin công ty"
+                };
+            }
+        }
+
+        private async Task InitializeDatabaseForCompany(string companyTaxCode)
+        {
+            try
+            {
+                Debug.WriteLine($"Đang khởi tạo database cho công ty MST: {companyTaxCode}");
+
+                // Hiển thị trạng thái
+                btnLogin.Content = "ĐANG KHỞI TẠO DB...";
+
+                // Khởi tạo database cho công ty này
+                await Task.Run(() =>
+                {
+                    databaseService.InitializeDatabaseForUser(companyTaxCode);
+                });
+
+                Debug.WriteLine($"Khởi tạo database thành công cho MST: {companyTaxCode}");
+
+                // Kiểm tra kết nối database
+                bool dbConnected = await Task.Run(() =>
+                {
+                    try
+                    {
+                        // Test connection bằng cách thử kiểm tra một bảng
+                        return databaseService.InvoiceHeaderExists("test_id", true) || true; // Luôn trả về true nếu không có lỗi
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Lỗi test connection: {ex.Message}");
+                        return false;
+                    }
+                });
+
+                if (dbConnected)
+                {
+                    Debug.WriteLine("Kết nối database thành công");
+                }
+                else
+                {
+                    throw new Exception("Không thể kết nối đến database");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi khởi tạo database: {ex.Message}");
+                MessageBox.Show($"Lỗi khởi tạo cơ sở dữ liệu: {ex.Message}", "Lỗi Database", MessageBoxButton.OK, MessageBoxImage.Error);
+                throw; // Re-throw để xử lý ở level cao hơn
+            }
+        }
+
+        // Thêm method để cleanup khi đóng cửa sổ
+        protected override void OnClosed(EventArgs e)
+        {
+            try
+            {
+                // Đóng kết nối database
+                databaseService?.Dispose();
+                client?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi khi cleanup: {ex.Message}");
+            }
+            base.OnClosed(e);
+        }
+
+        // === CÁC PHƯƠNG THỨC KHÁC GIỮ NGUYÊN ===
 
         private void btnShowPassword_Click(object sender, RoutedEventArgs e)
         {
@@ -413,112 +663,6 @@ namespace HoaDonDienTu
             {
                 Debug.WriteLine($"Lỗi khi phát hiện captcha: {ex.Message}");
                 return string.Empty;
-            }
-        }
-
-        private async Task<bool> LoginAsync(string username, string password, string captchaValue, string captchaKey)
-        {
-            try
-            {
-                string url = "https://hoadondientu.gdt.gov.vn:30000/security-taxpayer/authenticate";
-
-                // Tạo dữ liệu đăng nhập
-                var loginData = new
-                {
-                    username = username,
-                    password = password,
-                    cvalue = captchaValue,
-                    ckey = captchaKey
-                };
-
-                // Chuyển đổi thành JSON
-                string jsonData = JsonConvert.SerializeObject(loginData);
-                Debug.WriteLine($"Dữ liệu đăng nhập: {jsonData}");
-
-                // Tạo HttpContent
-                var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
-
-                // Gửi request
-                var response = await client.PostAsync(url, content);
-                var responseContent = await response.Content.ReadAsStringAsync();
-                Debug.WriteLine($"Kết quả đăng nhập: {responseContent}");
-
-                // Phân tích kết quả
-                var result = JsonConvert.DeserializeObject<dynamic>(responseContent);
-
-                if (response.IsSuccessStatusCode && result != null)
-                {
-                    // Kiểm tra xem token có tồn tại không
-                    if (result.token != null)
-                    {
-                        // Gán token trực tiếp vào biến static của App
-                        string token = result.token.ToString();
-                        App.AuthToken = token;
-
-                        // Kiểm tra token đã được lưu đúng
-                        Debug.WriteLine($"Token lưu thành công: {(App.AuthToken != null && App.AuthToken.Length > 10 ? App.AuthToken.Substring(0, 10) + "..." : "Invalid Token")}");
-
-                        // Cấu hình header cho HttpClient
-                        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", App.AuthToken);
-
-                        // Lấy tên đơn vị
-                        await GetCompanyName();
-
-                        return true;
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Token không tồn tại trong kết quả");
-                        MessageBox.Show("Đăng nhập thành công nhưng không nhận được token", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (result != null && result.message != null)
-                    {
-                        MessageBox.Show(result.message.ToString(), "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Lỗi đăng nhập: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Debug.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-                Debug.WriteLine($"Stack Trace: {ex.StackTrace}");
-                MessageBox.Show($"Lỗi khi đăng nhập: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-        }
-
-        private async Task GetCompanyName()
-        {
-            try
-            {
-                // Cấu hình header với token xác thực
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", App.AuthToken);
-
-                // Gọi API lấy thông tin đơn vị
-                var response = await client.GetAsync("https://hoadondientu.gdt.gov.vn:30000/security-taxpayer/profile");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var profileData = JsonConvert.DeserializeObject<dynamic>(content);
-
-                    if (profileData != null && profileData.name != null)
-                    {
-                        lblTenDV.Text = profileData.name.ToString();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Lỗi khi lấy thông tin công ty: {ex.Message}");
             }
         }
 

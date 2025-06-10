@@ -30,7 +30,7 @@ namespace HoaDonDienTu.Services
             }
         }
 
-        public void InitializeDatabaseForUser(string companyTaxCode)
+        public async Task InitializeDatabaseForUser(string companyTaxCode)
         {
             if (string.IsNullOrWhiteSpace(companyTaxCode))
             {

@@ -23,6 +23,7 @@ using System.Drawing;         // For System.Drawing.Color (EPPlus)
 using System.Xml.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;      // For XDocument, XElement (XML Export)
+using HoaDonDienTu.Services;
 
 
 
@@ -32,6 +33,8 @@ namespace HoaDonDienTu
     {
         private HttpClient client;
         private bool isMuaVao = true;
+        private DatabaseService databaseService;
+        private string currentCompanyTaxCode;
         private ObservableCollection<InvoiceSummary> invoiceSummaryList = new ObservableCollection<InvoiceSummary>();
         private ObservableCollection<InvoiceDisplayItem> invoiceDetailList = new ObservableCollection<InvoiceDisplayItem>();
         private ObservableCollection<FileInfo> xmlFileList = new ObservableCollection<FileInfo>();
@@ -39,11 +42,16 @@ namespace HoaDonDienTu
         private List<KeyValuePair<string, string>> invoiceStatusList = new List<KeyValuePair<string, string>>();
         private List<KeyValuePair<string, string>> checkResultList = new List<KeyValuePair<string, string>>();
 
-        public InvoiceWindow()
+        public InvoiceWindow(DatabaseService dbService, string companyTaxCode)
         {
             try
             {
                 InitializeComponent();
+                // Lưu reference đến database service và company info
+                databaseService = dbService ?? throw new ArgumentNullException(nameof(dbService));
+                currentCompanyTaxCode = companyTaxCode ?? throw new ArgumentNullException(nameof(companyTaxCode));
+
+                Debug.WriteLine($"InvoiceWindow khởi tạo với MST: {currentCompanyTaxCode}");
 
                 invoiceSummaryList = new ObservableCollection<InvoiceSummary>();
                 invoiceDetailList = new ObservableCollection<InvoiceDisplayItem>();
@@ -83,7 +91,7 @@ namespace HoaDonDienTu
                     }
                 }
                 txtXMLFolderPath.Text = defaultPath;
-
+                this.Title = $"Quản Lý Hóa Đơn Điện Tử - MST: {currentCompanyTaxCode}";
                 LoadStatusAndCheckResultLists();
                 UpdateUIState();
             }
@@ -462,65 +470,65 @@ namespace HoaDonDienTu
                     var response = await client.GetAsync(currentUrl);
                     Debug.WriteLine($"Response Status: {response.StatusCode}");
 
-                    // --- BẮT ĐẦU CODE GHI FILE TXT ---
-                    string responseContentForLog = "ERROR_READING_CONTENT"; // Giá trị mặc định nếu không đọc được
-                    if (response != null && response.Content != null)
-                    {
-                        try
-                        {
-                            responseContentForLog = await response.Content.ReadAsStringAsync(); // Đọc content một lần
+                    //// --- BẮT ĐẦU CODE GHI FILE TXT ---
+                    //string responseContentForLog = "ERROR_READING_CONTENT"; // Giá trị mặc định nếu không đọc được
+                    //if (response != null && response.Content != null)
+                    //{
+                    //    try
+                    //    {
+                    //        responseContentForLog = await response.Content.ReadAsStringAsync(); // Đọc content một lần
 
-                            // Tạo tên file dựa trên loại query và timestamp/page
-                            string typeQuery = isScoQuery ? "SCO" : "Query";
-                            string endpointType = currentUrl.Contains("purchase") ? "Purchase" : "Sold";
+                    //        // Tạo tên file dựa trên loại query và timestamp/page
+                    //        string typeQuery = isScoQuery ? "SCO" : "Query";
+                    //        string endpointType = currentUrl.Contains("purchase") ? "Purchase" : "Sold";
 
-                            // Lấy một phần của query string để làm tên file dễ nhận biết hơn (nếu có)
-                            string queryStringPart = "";
-                            if (currentUrl.Contains("search="))
-                            {
-                                try
-                                {
-                                    var uri = new Uri(currentUrl);
-                                    var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                                    string searchParam = query["search"];
-                                    if (!string.IsNullOrEmpty(searchParam) && searchParam.Length > 15) // Lấy 15 ký tự đầu của search param
-                                    {
-                                        queryStringPart = "_" + new string(searchParam.Substring(0, 15)
-                                            .Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray()); // Chỉ giữ ký tự an toàn cho tên file
-                                    }
-                                }
-                                catch { } // Bỏ qua nếu không parse được URI/query
-                            }
+                    //        // Lấy một phần của query string để làm tên file dễ nhận biết hơn (nếu có)
+                    //        string queryStringPart = "";
+                    //        if (currentUrl.Contains("search="))
+                    //        {
+                    //            try
+                    //            {
+                    //                var uri = new Uri(currentUrl);
+                    //                var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                    //                string searchParam = query["search"];
+                    //                if (!string.IsNullOrEmpty(searchParam) && searchParam.Length > 15) // Lấy 15 ký tự đầu của search param
+                    //                {
+                    //                    queryStringPart = "_" + new string(searchParam.Substring(0, 15)
+                    //                        .Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray()); // Chỉ giữ ký tự an toàn cho tên file
+                    //                }
+                    //            }
+                    //            catch { } // Bỏ qua nếu không parse được URI/query
+                    //        }
 
 
-                            string logFileName = $"SummaryResponse_{typeQuery}_{endpointType}{queryStringPart}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
+                    //        string logFileName = $"SummaryResponse_{typeQuery}_{endpointType}{queryStringPart}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
 
-                            // Lấy thư mục gốc của project (thường là nơi file .csproj tọa lạc)
-                            // Điều này hoạt động tốt khi chạy từ Visual Studio.
-                            // Nếu chạy file .exe đã build, nó sẽ là thư mục chứa file .exe (ví dụ: bin\Debug)
-                            string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                            // Để chắc chắn hơn là thư mục gốc của source code khi debug:
-                            // string solutionDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName; // Đi lùi 3 cấp từ bin/Debug/netX
-                            // string projectDirectoryToLog = Path.Combine(solutionDirectory, "LoggedApiResponses"); // Tạo thư mục con
+                    //        // Lấy thư mục gốc của project (thường là nơi file .csproj tọa lạc)
+                    //        // Điều này hoạt động tốt khi chạy từ Visual Studio.
+                    //        // Nếu chạy file .exe đã build, nó sẽ là thư mục chứa file .exe (ví dụ: bin\Debug)
+                    //        string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    //        // Để chắc chắn hơn là thư mục gốc của source code khi debug:
+                    //        // string solutionDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName; // Đi lùi 3 cấp từ bin/Debug/netX
+                    //        // string projectDirectoryToLog = Path.Combine(solutionDirectory, "LoggedApiResponses"); // Tạo thư mục con
 
-                            // Ghi vào thư mục output của project (bin/Debug hoặc bin/Release)
-                            string outputDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                            string logFolder = Path.Combine(outputDirectory, "ApiLog_Summaries");
-                            if (!Directory.Exists(logFolder))
-                            {
-                                Directory.CreateDirectory(logFolder);
-                            }
-                            string filePath = Path.Combine(logFolder, logFileName);
+                    //        // Ghi vào thư mục output của project (bin/Debug hoặc bin/Release)
+                    //        string outputDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    //        string logFolder = Path.Combine(outputDirectory, "ApiLog_Summaries");
+                    //        if (!Directory.Exists(logFolder))
+                    //        {
+                    //            Directory.CreateDirectory(logFolder);
+                    //        }
+                    //        string filePath = Path.Combine(logFolder, logFileName);
 
-                            File.WriteAllText(filePath, $"URL: {currentUrl}\n\nResponse Body:\n{responseContentForLog}");
-                            Debug.WriteLine($"Đã ghi Summary API Response vào: {filePath}");
-                        }
-                        catch (Exception logEx)
-                        {
-                            Debug.WriteLine($"Lỗi khi ghi Summary API Response ra file: {logEx.Message}");
-                        }
-                    }
-                    // --- KẾT THÚC CODE GHI FILE TXT ---
+                    //        File.WriteAllText(filePath, $"URL: {currentUrl}\n\nResponse Body:\n{responseContentForLog}");
+                    //        Debug.WriteLine($"Đã ghi Summary API Response vào: {filePath}");
+                    //    }
+                    //    catch (Exception logEx)
+                    //    {
+                    //        Debug.WriteLine($"Lỗi khi ghi Summary API Response ra file: {logEx.Message}");
+                    //    }
+                    //}
+                    //// --- KẾT THÚC CODE GHI FILE TXT ---
 
                     if (!response.IsSuccessStatusCode)
                     {
@@ -538,7 +546,7 @@ namespace HoaDonDienTu
                         UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode // Ignore unknown fields
                     };
 
-                    var result = System.Text.Json.JsonSerializer.Deserialize<InvoiceQueryResult>(responseContentForLog, options);
+                    var result = System.Text.Json.JsonSerializer.Deserialize<InvoiceQueryResult>(await response.Content.ReadAsStringAsync(), options);
 
                     if (result?.Datas != null && result.Datas.Any())
                     {
