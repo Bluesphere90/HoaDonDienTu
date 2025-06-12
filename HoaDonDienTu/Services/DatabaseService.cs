@@ -247,6 +247,7 @@ namespace HoaDonDienTu.Services
                                     cmdHeader.CommandText = BuildInsertInvoiceSummaryCommand(headerTable);
                                     AddSummaryParametersToCommand(cmdHeader, summaryData, false);
                                     Debug.WriteLine($"Executing INSERT for summary ID: {summaryData.id}");
+                                    Debug.WriteLine($"Query: {cmdHeader.CommandText}");
                                 }
 
                                 int rowsAffected = cmdHeader.ExecuteNonQuery();
@@ -581,8 +582,8 @@ namespace HoaDonDienTu.Services
         // Các hàm Build...Command và AddParameters... cần được viết đầy đủ
         private string BuildInsertInvoiceSummaryCommand(string tableName)
         {
-            // Tạo danh sách tên cột từ các thuộc tính của SqliteInvoiceHeader (trừ khi có attribute ignore)
-            var properties = typeof(SqliteInvoiceHeader).GetProperties().Select(p => p.Name);
+            // Tạo danh sách tên cột từ các thuộc tính của InvoiceSummaryData
+            var properties = typeof(InvoiceSummaryData).GetProperties().Select(p => p.Name);
             string columns = string.Join(", ", properties);
             string parameters = string.Join(", ", properties.Select(p => "@" + p));
             return $"INSERT OR IGNORE INTO {tableName} ({columns}) VALUES ({parameters});";
@@ -590,7 +591,7 @@ namespace HoaDonDienTu.Services
 
         private string BuildUpdateInvoiceSummaryCommand(string tableName)
         {
-            var properties = typeof(SqliteInvoiceHeader).GetProperties().Where(p => p.Name != "id").Select(p => p.Name); // Không update khóa chính
+            var properties = typeof(InvoiceSummaryData).GetProperties().Where(p => p.Name != "id").Select(p => p.Name); // Không update khóa chính
             string setClauses = string.Join(", ", properties.Select(p => $"{p} = @{p}"));
             return $"UPDATE {tableName} SET {setClauses} WHERE id = @id;";
         }
