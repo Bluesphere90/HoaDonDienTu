@@ -445,6 +445,10 @@ namespace HoaDonDienTu.Models
         [System.Text.Json.Serialization.JsonConverter(typeof(FlexibleStringConverter))]
         public string isHDTrung { get; set; }
 
+        // === Phần phục vụ cho việc lưu vào DataBase ===
+
+        public string LastDownloadedDetailDate { get; set; } // Ngày tải chi tiết hóa đơn lần cuối, định dạng "dd/MM/yyyy"
+
     }
 
     public class InvoiceSummary // Model cho DataGrid dgTongHop
@@ -846,6 +850,7 @@ namespace HoaDonDienTu.Models
     // =========================================================================
     public class InvoiceIdentifier
     {
+        public string ID { get; set; } // ID của hóa đơn
         public string Nbmst { get; set; }
         public string Khhdon { get; set; }
         public string Shdon { get; set; }

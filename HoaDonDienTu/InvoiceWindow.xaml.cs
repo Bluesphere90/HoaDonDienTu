@@ -51,6 +51,18 @@ namespace HoaDonDienTu
                 databaseService = dbService ?? throw new ArgumentNullException(nameof(dbService));
                 currentCompanyTaxCode = companyTaxCode ?? throw new ArgumentNullException(nameof(companyTaxCode));
 
+                // === THÊM DEBUG Ở ĐÂY ===
+                Debug.WriteLine("=== DEBUG InvoiceWindow Constructor ===");
+                Debug.WriteLine($"DatabaseService null? {databaseService == null}");
+                if (databaseService != null)
+                {
+                    // Cần thêm property public để check connection trong DatabaseService
+                    Debug.WriteLine($"Connection null? {databaseService.IsConnectionNull()}");
+                    Debug.WriteLine($"Connection State: {databaseService.GetConnectionState()}");
+                    Debug.WriteLine($"Current DB Path: {databaseService.GetCurrentDbPath()}");
+                }
+                Debug.WriteLine("===========================================");
+
                 Debug.WriteLine($"InvoiceWindow khởi tạo với MST: {currentCompanyTaxCode}");
 
                 invoiceSummaryList = new ObservableCollection<InvoiceSummary>();
@@ -92,6 +104,8 @@ namespace HoaDonDienTu
                 }
                 txtXMLFolderPath.Text = defaultPath;
                 this.Title = $"Quản Lý Hóa Đơn Điện Tử - MST: {currentCompanyTaxCode}";
+
+
                 LoadStatusAndCheckResultLists();
                 UpdateUIState();
             }
@@ -557,6 +571,7 @@ namespace HoaDonDienTu
                             // SỬA LỖI: Luôn thêm vào invoiceIdentifiers (cần cho việc tải chi tiết và XML)
                             invoiceIdentifiers.Add(new InvoiceIdentifier
                             {
+                                ID = invoiceData.id,
                                 Nbmst = invoiceData.nbmst,
                                 Khhdon = invoiceData.khhdon,
                                 Shdon = invoiceData.shdon,
@@ -564,6 +579,57 @@ namespace HoaDonDienTu
                                 IsScoQuery = isScoQuery,
                                 Tdlap = invoiceData.tdlap
                             });
+
+                            // === LOGIC LƯU VÀO DATABASE ===
+                            try
+                            {
+                                // THÊM DEBUG TRƯỚC KHI CHECK EXISTS
+                                Debug.WriteLine("=== DEBUG Trước khi lưu vào DB ===");
+                                Debug.WriteLine($"DatabaseService null? {databaseService == null}");
+                                if (databaseService != null)
+                                {
+                                    Debug.WriteLine($"Connection null? {databaseService.IsConnectionNull()}");
+                                    Debug.WriteLine($"Connection State: {databaseService.GetConnectionState()}");
+                                }
+                                Debug.WriteLine($"invoiceData null? {invoiceData == null}");
+                                Debug.WriteLine($"invoiceData.id: {invoiceData?.id}");
+                                Debug.WriteLine($"isMuaVao: {isMuaVao}");
+                                Debug.WriteLine("=====================================");
+
+                                // Kiểm tra xem hóa đơn đã tồn tại trong database chưa
+                                bool headerExists = databaseService.InvoiceHeaderExists(invoiceData.id, isMuaVao);
+
+                                if (!headerExists)
+                                {
+                                    Debug.WriteLine($"Hóa đơn ID {invoiceData.id} chưa có trong DB, đang lưu...");
+
+                                    // THÊM DEBUG NGAY TRƯỚC KHI SAVE
+                                    Debug.WriteLine("=== DEBUG Ngay trước SaveInvoiceSummaryData ===");
+                                    Debug.WriteLine($"Connection State lúc này: {databaseService.GetConnectionState()}");
+
+                                    // Lưu trực tiếp InvoiceSummaryData vào database
+                                    databaseService.SaveInvoiceSummaryData(invoiceData, isMuaVao);
+
+                                    Debug.WriteLine($"Đã lưu hóa đơn ID {invoiceData.id} vào database");
+                                }
+                                else
+                                {
+                                    Debug.WriteLine($"Hóa đơn ID {invoiceData.id} đã tồn tại trong DB, bỏ qua việc lưu");
+                                }
+                            }
+                            catch (Exception dbEx)
+                            {
+                                // Log lỗi nhưng không dừng việc xử lý
+                                Debug.WriteLine($"Lỗi khi lưu hóa đơn ID {invoiceData.id} vào DB: {dbEx.Message}");
+
+                                // Log lỗi nhưng không dừng việc xử lý
+                                Debug.WriteLine($"=== EXCEPTION khi lưu hóa đơn ===");
+                                Debug.WriteLine($"Invoice ID: {invoiceData?.id}");
+                                Debug.WriteLine($"Exception Message: {dbEx.Message}");
+                                Debug.WriteLine($"Exception StackTrace: {dbEx.StackTrace}");
+                                Debug.WriteLine("================================");
+                            }
+                            // === KẾT THÚC LOGIC DATABASE ===
 
                             // SỬA LỖI: Chỉ hiển thị lên giao diện nếu không phải chế độ silent
                             if (!silentMode)

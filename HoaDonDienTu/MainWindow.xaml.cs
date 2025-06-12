@@ -390,7 +390,7 @@ namespace HoaDonDienTu
             try
             {
                 // Đóng kết nối database
-                databaseService?.Dispose();
+                //databaseService?.Dispose();
                 client?.Dispose();
             }
             catch (Exception ex)
