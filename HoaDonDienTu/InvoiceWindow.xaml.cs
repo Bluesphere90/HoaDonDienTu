@@ -484,65 +484,65 @@ namespace HoaDonDienTu
                     var response = await client.GetAsync(currentUrl);
                     Debug.WriteLine($"Response Status: {response.StatusCode}");
 
-                    // --- BẮT ĐẦU CODE GHI FILE TXT ---
-                    string responseContentForLog = "ERROR_READING_CONTENT"; // Giá trị mặc định nếu không đọc được
-                    if (response != null && response.Content != null)
-                    {
-                        try
-                        {
-                            responseContentForLog = await response.Content.ReadAsStringAsync(); // Đọc content một lần
+                    //// --- BẮT ĐẦU CODE GHI FILE TXT ---
+                    //string responseContentForLog = "ERROR_READING_CONTENT"; // Giá trị mặc định nếu không đọc được
+                    //if (response != null && response.Content != null)
+                    //{
+                    //    try
+                    //    {
+                    //        responseContentForLog = await response.Content.ReadAsStringAsync(); // Đọc content một lần
 
-                            // Tạo tên file dựa trên loại query và timestamp/page
-                            string typeQuery = isScoQuery ? "SCO" : "Query";
-                            string endpointType = currentUrl.Contains("purchase") ? "Purchase" : "Sold";
+                    //        // Tạo tên file dựa trên loại query và timestamp/page
+                    //        string typeQuery = isScoQuery ? "SCO" : "Query";
+                    //        string endpointType = currentUrl.Contains("purchase") ? "Purchase" : "Sold";
 
-                            // Lấy một phần của query string để làm tên file dễ nhận biết hơn (nếu có)
-                            string queryStringPart = "";
-                            if (currentUrl.Contains("search="))
-                            {
-                                try
-                                {
-                                    var uri = new Uri(currentUrl);
-                                    var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                                    string searchParam = query["search"];
-                                    if (!string.IsNullOrEmpty(searchParam) && searchParam.Length > 15) // Lấy 15 ký tự đầu của search param
-                                    {
-                                        queryStringPart = "_" + new string(searchParam.Substring(0, 15)
-                                            .Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray()); // Chỉ giữ ký tự an toàn cho tên file
-                                    }
-                                }
-                                catch { } // Bỏ qua nếu không parse được URI/query
-                            }
+                    //        // Lấy một phần của query string để làm tên file dễ nhận biết hơn (nếu có)
+                    //        string queryStringPart = "";
+                    //        if (currentUrl.Contains("search="))
+                    //        {
+                    //            try
+                    //            {
+                    //                var uri = new Uri(currentUrl);
+                    //                var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                    //                string searchParam = query["search"];
+                    //                if (!string.IsNullOrEmpty(searchParam) && searchParam.Length > 15) // Lấy 15 ký tự đầu của search param
+                    //                {
+                    //                    queryStringPart = "_" + new string(searchParam.Substring(0, 15)
+                    //                        .Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray()); // Chỉ giữ ký tự an toàn cho tên file
+                    //                }
+                    //            }
+                    //            catch { } // Bỏ qua nếu không parse được URI/query
+                    //        }
 
 
-                            string logFileName = $"SummaryResponse_{typeQuery}_{endpointType}{queryStringPart}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
+                    //        string logFileName = $"SummaryResponse_{typeQuery}_{endpointType}{queryStringPart}_{DateTime.Now:yyyyMMddHHmmssfff}.txt";
 
-                            // Lấy thư mục gốc của project (thường là nơi file .csproj tọa lạc)
-                            // Điều này hoạt động tốt khi chạy từ Visual Studio.
-                            // Nếu chạy file .exe đã build, nó sẽ là thư mục chứa file .exe (ví dụ: bin\Debug)
-                            string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                            // Để chắc chắn hơn là thư mục gốc của source code khi debug:
-                            // string solutionDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName; // Đi lùi 3 cấp từ bin/Debug/netX
-                            // string projectDirectoryToLog = Path.Combine(solutionDirectory, "LoggedApiResponses"); // Tạo thư mục con
+                    //        // Lấy thư mục gốc của project (thường là nơi file .csproj tọa lạc)
+                    //        // Điều này hoạt động tốt khi chạy từ Visual Studio.
+                    //        // Nếu chạy file .exe đã build, nó sẽ là thư mục chứa file .exe (ví dụ: bin\Debug)
+                    //        string projectDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    //        // Để chắc chắn hơn là thư mục gốc của source code khi debug:
+                    //        // string solutionDirectory = Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName; // Đi lùi 3 cấp từ bin/Debug/netX
+                    //        // string projectDirectoryToLog = Path.Combine(solutionDirectory, "LoggedApiResponses"); // Tạo thư mục con
 
-                            // Ghi vào thư mục output của project (bin/Debug hoặc bin/Release)
-                            string outputDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                            string logFolder = Path.Combine(outputDirectory, "ApiLog_Summaries");
-                            if (!Directory.Exists(logFolder))
-                            {
-                                Directory.CreateDirectory(logFolder);
-                            }
-                            string filePath = Path.Combine(logFolder, logFileName);
+                    //        // Ghi vào thư mục output của project (bin/Debug hoặc bin/Release)
+                    //        string outputDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                    //        string logFolder = Path.Combine(outputDirectory, "ApiLog_Summaries");
+                    //        if (!Directory.Exists(logFolder))
+                    //        {
+                    //            Directory.CreateDirectory(logFolder);
+                    //        }
+                    //        string filePath = Path.Combine(logFolder, logFileName);
 
-                            File.WriteAllText(filePath, $"URL: {currentUrl}\n\nResponse Body:\n{responseContentForLog}");
-                            Debug.WriteLine($"Đã ghi Summary API Response vào: {filePath}");
-                        }
-                        catch (Exception logEx)
-                        {
-                            Debug.WriteLine($"Lỗi khi ghi Summary API Response ra file: {logEx.Message}");
-                        }
-                    }
-                    // --- KẾT THÚC CODE GHI FILE TXT ---
+                    //        File.WriteAllText(filePath, $"URL: {currentUrl}\n\nResponse Body:\n{responseContentForLog}");
+                    //        Debug.WriteLine($"Đã ghi Summary API Response vào: {filePath}");
+                    //    }
+                    //    catch (Exception logEx)
+                    //    {
+                    //        Debug.WriteLine($"Lỗi khi ghi Summary API Response ra file: {logEx.Message}");
+                    //    }
+                    //}
+                    //// --- KẾT THÚC CODE GHI FILE TXT ---
 
                     if (!response.IsSuccessStatusCode)
                     {
@@ -765,58 +765,58 @@ namespace HoaDonDienTu
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync();
-                        var apiResponseData = System.Text.Json.JsonSerializer.Deserialize<InvoiceDetailApiResponse>(content);
+                        var apiResponseData = System.Text.Json.JsonSerializer.Deserialize<InvoiceDetailData>(content);
 
                         if (apiResponseData != null)
                         {
-                            string hinhThucTT = !string.IsNullOrEmpty(apiResponseData.ApiHinhThucThanhToanCode) ?
-                                                apiResponseData.ApiHinhThucThanhToanCode :
-                                                apiResponseData.ApiHinhThucThanhToanText;
+                            string hinhThucTT = !string.IsNullOrEmpty(apiResponseData.htttoan) ?
+                                                apiResponseData.htttoan :
+                                                apiResponseData.thtttoan;
 
-                            if (apiResponseData.Hdhhdvu != null && apiResponseData.Hdhhdvu.Any())
+                            if (apiResponseData.hdhhdvu != null && apiResponseData.hdhhdvu.Any())
                             {
-                                foreach (var rawItem in apiResponseData.Hdhhdvu)
+                                foreach (var rawItem in apiResponseData.hdhhdvu)
                                 {
                                     var displayItem = new InvoiceDisplayItem
                                     {
-                                        LoaiHoaDon = apiResponseData.ApiLoaiHoaDon,
-                                        MauSoHoaDon = apiResponseData.ApiMauSoHoaDon,
-                                        KyHieuHoaDon = apiResponseData.ApiKyHieuHoaDon,
-                                        SoHoaDon = apiResponseData.ApiSoHoaDon,
-                                        NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayLapHoaDonISO),
-                                        NgayKy = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayKyISO),
-                                        MaCQT = apiResponseData.ApiMaCQT,
-                                        DonViTienTe = apiResponseData.ApiDonViTienTe,
-                                        TyGia = apiResponseData.ApiTyGia,
-                                        TenNguoiBan = apiResponseData.ApiTenNguoiBan,
-                                        MaSoThueNguoiBan = apiResponseData.ApiMaSoThueNguoiBan,
-                                        DiaChiNguoiBan = apiResponseData.ApiDiaChiNguoiBan,
-                                        TenNguoiMua = apiResponseData.ApiTenNguoiMua,
-                                        MaSoThueNguoiMua = apiResponseData.ApiMaSoThueNguoiMua,
-                                        DiaChiNguoiMua = apiResponseData.ApiDiaChiNguoiMua,
+                                        LoaiHoaDon = apiResponseData.tlhdon,
+                                        MauSoHoaDon = apiResponseData.khmshdon,
+                                        KyHieuHoaDon = apiResponseData.khhdon,
+                                        SoHoaDon = apiResponseData.shdon,
+                                        NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.tdlap),
+                                        NgayKy = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.nky),
+                                        MaCQT = apiResponseData.mhdon,
+                                        DonViTienTe = apiResponseData.dvtte,
+                                        TyGia = apiResponseData.tgia,
+                                        TenNguoiBan = apiResponseData.nbten,
+                                        MaSoThueNguoiBan = apiResponseData.nbmst,
+                                        DiaChiNguoiBan = apiResponseData.nbdchi,
+                                        TenNguoiMua = apiResponseData.nmten,
+                                        MaSoThueNguoiMua = apiResponseData.nmmst,
+                                        DiaChiNguoiMua = apiResponseData.nmdchi,
                                         HinhThucThanhToan = hinhThucTT,
-                                        SoThuTuDong = rawItem.SoThuTuDongRaw,
-                                        TenHHDV = rawItem.TenHHDVRaw,
-                                        DonViTinh = rawItem.DonViTinhRaw,
-                                        SoLuong = rawItem.SoLuongRaw,
-                                        DonGia = rawItem.DonGiaRaw,
-                                        SoTienChietKhau = rawItem.SoTienChietKhauRaw,
-                                        LoaiThueSuat = rawItem.LoaiThueSuatRaw,
-                                        ThanhTienChuaThue = rawItem.ThanhTienChuaThueRaw,
-                                        TienThue = rawItem.TienThueRaw,
+                                        SoThuTuDong = rawItem.stt,
+                                        TenHHDV = rawItem.ten,
+                                        DonViTinh = rawItem.dvtinh,
+                                        SoLuong = rawItem.sluong,
+                                        DonGia = rawItem.dgia,
+                                        SoTienChietKhau = rawItem.tlckhau,
+                                        LoaiThueSuat = rawItem.tsuat,
+                                        ThanhTienChuaThue = rawItem.thtcthue,
+                                        TienThue = rawItem.tthue,
                                         
                                         
-                                        TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(apiResponseData.ApiTrangThaiHD_Code),
-                                        TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ApiTinhTrangXuLy_Code)
+                                        TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(apiResponseData.tthai.ToString()),
+                                        TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ttxly.ToString())
                                     };
 
                                     if (displayItem.SoThuTuDong == 1)
                                     {
-                                        displayItem.TongTienChuaThue_HD = apiResponseData.ApiTongTienChuaThue;
-                                        displayItem.TongTienThue_HD = apiResponseData.ApiTongTienThue;
-                                        displayItem.TongTienChietKhauTM_HD = apiResponseData.ApiTongTienChietKhauTM;
-                                        displayItem.TongTienThanhToan_HD = apiResponseData.ApiTongTienThanhToan;
-                                        displayItem.TongTienThanhToanBangChu_HD = apiResponseData.ApiTongTienThanhToanBangChu;
+                                        displayItem.TongTienChuaThue_HD = apiResponseData.tgtcthue;
+                                        displayItem.TongTienThue_HD = apiResponseData.tgtthue;
+                                        displayItem.TongTienChietKhauTM_HD = apiResponseData.ttcktmai;
+                                        //displayItem.TongTienThanhToan_HD = apiResponseData.ApiTongTienThanhToan;
+                                        //displayItem.TongTienThanhToanBangChu_HD = apiResponseData.ApiTongTienThanhToanBangChu;
                                     };
                                     System.Windows.Application.Current.Dispatcher.Invoke(() => invoiceDetailList.Add(displayItem));
                                 }
@@ -825,17 +825,28 @@ namespace HoaDonDienTu
                             {
                                 var displayItemMsg = new InvoiceDisplayItem
                                 {
-                                    LoaiHoaDon = apiResponseData.ApiLoaiHoaDon,
-                                    MauSoHoaDon = apiResponseData.ApiMauSoHoaDon ?? invoiceIdentity.Khmshdon,
-                                    KyHieuHoaDon = apiResponseData.ApiKyHieuHoaDon ?? invoiceIdentity.Khhdon,
-                                    SoHoaDon = apiResponseData.ApiSoHoaDon ?? invoiceIdentity.Shdon,
-                                    NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.ApiNgayLapHoaDonISO ?? invoiceIdentity.Tdlap),
-                                    TenNguoiBan = apiResponseData.ApiTenNguoiBan,
-                                    TenNguoiMua = apiResponseData.ApiTenNguoiMua,
+                                    LoaiHoaDon = apiResponseData.tlhdon,
+                                    MauSoHoaDon = apiResponseData.khmshdon,
+                                    KyHieuHoaDon = apiResponseData.khhdon,
+                                    SoHoaDon = apiResponseData.shdon,
+                                    NgayLapHoaDon = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.tdlap),
+                                    NgayKy = Helper.FormatHelper.FormatInvoiceDate(apiResponseData.nky),
+                                    MaCQT = apiResponseData.mhdon,
+                                    DonViTienTe = apiResponseData.dvtte,
+                                    TyGia = apiResponseData.tgia,
+                                    TenNguoiBan = apiResponseData.nbten,
+                                    MaSoThueNguoiBan = apiResponseData.nbmst,
+                                    DiaChiNguoiBan = apiResponseData.nbdchi,
+                                    TenNguoiMua = apiResponseData.nmten,
+                                    MaSoThueNguoiMua = apiResponseData.nmmst,
+                                    DiaChiNguoiMua = apiResponseData.nmdchi,
+                                    HinhThucThanhToan = hinhThucTT,
                                     TenHHDV = "Không có dữ liệu chi tiết hoặc hóa đơn không có dòng hàng hóa.",
-                                    TongTienThanhToan_HD = apiResponseData.ApiTongTienThanhToan,
-                                    TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(apiResponseData.ApiTrangThaiHD_Code),
-                                    TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ApiTinhTrangXuLy_Code)
+                                    TongTienChuaThue_HD = apiResponseData.tgtcthue,
+                                    TongTienThue_HD = apiResponseData.tgtthue,
+                                    TongTienChietKhauTM_HD = apiResponseData.ttcktmai,
+                                    TrangThai_HD = Helper.FormatHelper.GetInvoiceStatusDescription(apiResponseData.tthai.ToString()),
+                                    TinhTrangXuLy_HD = Helper.FormatHelper.GetInvoiceProcessingStatusDescription(apiResponseData.ttxly.ToString())
                                 };
                                 System.Windows.Application.Current.Dispatcher.Invoke(() => invoiceDetailList.Add(displayItemMsg));
                             }
