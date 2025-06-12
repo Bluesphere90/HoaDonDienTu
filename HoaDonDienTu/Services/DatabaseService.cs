@@ -582,11 +582,22 @@ namespace HoaDonDienTu.Services
         // Các hàm Build...Command và AddParameters... cần được viết đầy đủ
         private string BuildInsertInvoiceSummaryCommand(string tableName)
         {
-            // Tạo danh sách tên cột từ các thuộc tính của InvoiceSummaryData
             var properties = typeof(InvoiceSummaryData).GetProperties().Select(p => p.Name);
+
+            Debug.WriteLine("=== Properties từ InvoiceSummaryData ===");
+            foreach (var prop in properties)
+            {
+                Debug.WriteLine($"Property: {prop}");
+            }
+
             string columns = string.Join(", ", properties);
             string parameters = string.Join(", ", properties.Select(p => "@" + p));
-            return $"INSERT OR IGNORE INTO {tableName} ({columns}) VALUES ({parameters});";
+
+            Debug.WriteLine($"=== SQL Command ===");
+            Debug.WriteLine($"Columns: {columns}");
+            Debug.WriteLine($"Parameters: {parameters}");
+
+            return $"INSERT INTO {tableName} ({columns}) VALUES ({parameters});";
         }
 
         private string BuildUpdateInvoiceSummaryCommand(string tableName)
@@ -606,29 +617,25 @@ namespace HoaDonDienTu.Services
 
         private void AddSummaryParametersToCommand(SqliteCommand command, InvoiceSummaryData summaryData, bool isUpdate)
         {
-            // Sử dụng reflection để tự động thêm các parameters
             foreach (var prop in typeof(InvoiceSummaryData).GetProperties())
             {
-                string paramName = $"@{prop.Name.ToLower()}";
-
+                string paramName = $"@{prop.Name}";
                 if (command.CommandText.Contains(paramName))
                 {
                     object value = prop.GetValue(summaryData);
 
-                    // Xử lý các object properties (convert to string)
-                    if (value != null && (prop.PropertyType == typeof(object) || !prop.PropertyType.IsPrimitive && prop.PropertyType != typeof(string) && prop.PropertyType != typeof(decimal) && prop.PropertyType != typeof(decimal?)))
+                    // XỬ LÝ ĐặC BIỆT cho LastDownloadedDetailDate
+                    if (prop.Name == "LastDownloadedDetailDate")
+                    {
+                        value = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture);
+                    }
+                    else if (value != null && prop.PropertyType == typeof(object))
                     {
                         value = value.ToString();
                     }
 
                     command.Parameters.AddWithValue(paramName, value ?? DBNull.Value);
                 }
-            }
-
-            // Thêm parameter cho LastDownloadedDetailDate
-            if (command.CommandText.Contains("@lastdownloadeddetaildate"))
-            {
-                command.Parameters.AddWithValue("@lastdownloadeddetaildate", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
             }
         }
 
