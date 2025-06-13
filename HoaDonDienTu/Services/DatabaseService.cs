@@ -186,6 +186,37 @@ namespace HoaDonDienTu.Services
             }
         }
 
+        public bool InvoiceDetailExists (string invoiceDetailId, bool isInputInvoice)
+        {
+            if (string.IsNullOrEmpty(invoiceDetailId) && string.IsNullOrEmpty(_connectionString))
+            {
+                Debug.WriteLine($"InvoiceDetailExists: Invalid parameters. invoiceId={invoiceDetailId}, connectionString={!string.IsNullOrEmpty(_connectionString)}");
+                return false;
+            }
+
+            try
+            {
+                using (var connection = new SqliteConnection(_connectionString))
+                {
+                    connection.Open();
+                    string tableName = isInputInvoice ? "InputInvDetails" : "OutputInvDetails";
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT COUNT(1) FROM {tableName} WHERE id = @id";
+                        command.Parameters.AddWithValue("@id", invoiceDetailId);
+                        var result = Convert.ToInt32(command.ExecuteScalar());
+                        Debug.WriteLine($"InvoiceDetailExists: {tableName}, ID={invoiceDetailId}, Exists={result > 0}");
+                        return result > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Lỗi InvoiceDetailExists: {ex.Message}");
+                return false;
+            }
+        }
+
         public void SaveInvoiceSummaryData(InvoiceSummaryData summaryData, bool isInputInvoice)
         {
             Debug.WriteLine("=== DEBUG SaveInvoiceSummaryData START ===");
@@ -281,6 +312,59 @@ namespace HoaDonDienTu.Services
                 throw;
             }
         }
+
+        public void SaveInvoiceDetailData(HangHoaDichVuRawData detailData, bool isInputInvoice)
+        {
+            if (detailData == null || string.IsNullOrEmpty(detailData.id)) 
+            {
+                Debug.WriteLine("SaveInvoiceDetailData: detailData null hoặc id rỗng.");
+                return;
+            }
+
+            string detailTable = isInputInvoice ? "InputInvDetails" : "OutputInvDetails";
+            try
+            {
+                using (var connection = new SqliteConnection(_connectionString))
+                {
+                    connection.Open();
+                    Debug.WriteLine($"Connection opened successfully. State: {connection.State}");
+
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            using (var cmdHeader = connection.CreateCommand())
+                            {
+                                cmdHeader.Transaction = transaction;
+                                cmdHeader.CommandText = BuildInsertInvoiceDetailCommand(detailTable);
+                                AddDetailParametersToCommand(cmdHeader, detailData,false);
+                                int rowsAffected = cmdHeader.ExecuteNonQuery();
+                            }
+                            transaction.Commit();
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                transaction.Rollback();
+                                Debug.WriteLine("Transaction rolled back successfully");
+                            }
+                            catch (Exception rbEx)
+                            {
+                                Debug.WriteLine($"Rollback error: {rbEx.Message}");
+                            }
+                            throw;
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
 
         // Method để lấy danh sách invoice summaries từ database (đơn giản hóa)
         public List<InvoiceSummary> GetInvoiceSummariesFromDb(bool isInputInvoice, DateTime? fromDate = null, DateTime? toDate = null, string statusFilter = null, string processingStatusFilter = null)
@@ -426,176 +510,24 @@ namespace HoaDonDienTu.Services
             }
         }
 
-        //public void SaveInvoiceDetail(InvoiceDetailApiResponse apiResponse, bool isInputInvoice, string companyTaxCode)
-        //{
-        //    if (_connection == null || _connection.State != System.Data.ConnectionState.Open || apiResponse == null)
-        //    {
-        //        Debug.WriteLine("SaveInvoiceDetail: Kết nối DB không hợp lệ hoặc apiResponse là null.");
-        //        return;
-        //    }
-
-        //    // API chi tiết trả về trường 'id' ở cấp gốc của JSON, đây là ID duy nhất của hóa đơn đó.
-        //    // Chúng ta sẽ dùng nó làm khóa chính cho bảng Header.
-
-        //    string invoiceApiId = (string)apiResponse.GetType().GetProperty("id")?.GetValue(apiResponse) ??
-        //                          apiResponse.ApiMaSoThueNguoiBan + apiResponse.ApiMauSoHoaDon + apiResponse.ApiKyHieuHoaDon + apiResponse.ApiSoHoaDon; // Dự phòng nếu ko có 'id'
-
-        //    if (string.IsNullOrEmpty(invoiceApiId))
-        //    {
-        //        Debug.WriteLine("SaveInvoiceDetail: Không thể xác định ID cho hóa đơn từ apiResponse.");
-        //        return;
-        //    }
-
-
-        //    string headerTable = isInputInvoice ? "InputInv" : "OutputInv";
-        //    string detailTable = isInputInvoice ? "InputInvDetails" : "OutputInvDetails";
-
-        //    lock (_dbLock)
-        //    {
-        //        using (var transaction = _connection.BeginTransaction())
-        //        {
-        //            try
-        //            {
-        //                var sqliteHeader = MapApiResponseToSqliteHeader(apiResponse, invoiceApiId);
-        //                bool headerExists = InvoiceHeaderExists(sqliteHeader.id, isInputInvoice);
-
-        //                using (var cmdHeader = _connection.CreateCommand())
-        //                {
-        //                    cmdHeader.Transaction = transaction;
-        //                    if (headerExists)
-        //                    {
-        //                        cmdHeader.CommandText = BuildUpdateInvoiceSummaryCommand(headerTable);
-        //                        AddSummaryParametersToCommand(cmdHeader, sqliteHeader, true); // isUpdate = true
-        //                    }
-        //                    else
-        //                    {
-        //                        cmdHeader.CommandText = BuildInsertInvoiceSummaryCommand(headerTable);
-        //                        AddSummaryParametersToCommand(cmdHeader, sqliteHeader, false); // isUpdate = false
-        //                    }
-        //                    cmdHeader.ExecuteNonQuery();
-        //                }
-
-        //                using (var cmdDeleteDetails = _connection.CreateCommand())
-        //                {
-        //                    cmdDeleteDetails.Transaction = transaction;
-        //                    cmdDeleteDetails.CommandText = $"DELETE FROM {detailTable} WHERE idhdon = @idhdon;";
-        //                    cmdDeleteDetails.Parameters.AddWithValue("@idhdon", sqliteHeader.id);
-        //                    cmdDeleteDetails.ExecuteNonQuery();
-        //                }
-
-        //                if (apiResponse.Hdhhdvu != null)
-        //                {
-        //                    foreach (var rawItem in apiResponse.Hdhhdvu)
-        //                    {
-        //                        var sqliteItem = MapRawItemToSqliteItem(rawItem, sqliteHeader.id);
-        //                        using (var cmdDetail = _connection.CreateCommand())
-        //                        {
-        //                            cmdDetail.Transaction = transaction;
-        //                            cmdDetail.CommandText = BuildInsertInvoiceItemCommand(detailTable);
-        //                            AddParametersToCommand(cmdDetail, sqliteItem);
-        //                            cmdDetail.ExecuteNonQuery();
-        //                        }
-        //                    }
-        //                }
-        //                transaction.Commit();
-        //                Debug.WriteLine($"Đã lưu/cập nhật HĐ ID: {sqliteHeader.id} vào bảng {headerTable}");
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                Debug.WriteLine($"Lỗi khi lưu hóa đơn vào DB (ID: {invoiceApiId}): {ex.ToString()}");
-        //                try { transaction.Rollback(); } catch (Exception rbEx) { Debug.WriteLine($"Lỗi rollback: {rbEx.Message}"); }
-        //                throw;
-        //            }
-        //        }
-        //    }
-        //}
-
-        //private SqliteInvoiceHeader MapApiResponseToSqliteHeader(InvoiceDetailApiResponse apiResp, string invoiceApiId)
-        //{
-        //    // Đây là nơi bạn ánh xạ TẤT CẢ các trường từ apiResp
-        //    // sang các thuộc tính của SqliteInvoiceHeader
-        //    var header = new SqliteInvoiceHeader
-        //    {
-        //        id = invoiceApiId, // Sử dụng ID từ API Detail response
-        //        khmshdon = apiResp.ApiMauSoHoaDon,
-        //        khhdon = apiResp.ApiKyHieuHoaDon,
-        //        shdon = apiResp.ApiSoHoaDon,
-        //        tdlap = apiResp.ApiNgayLapHoaDonISO,
-        //        nky = apiResp.ApiNgayKyISO,
-        //        nbmst = apiResp.ApiMaSoThueNguoiBan,
-        //        nbten = apiResp.ApiTenNguoiBan,
-        //        nbdchi = apiResp.ApiDiaChiNguoiBan,
-        //        nmmst = apiResp.ApiMaSoThueNguoiMua,
-        //        nmten = apiResp.ApiTenNguoiMua,
-        //        nmdchi = apiResp.ApiDiaChiNguoiMua,
-        //        dvtte = apiResp.ApiDonViTienTe,
-        //        tgia = apiResp.ApiTyGia?.ToString(CultureInfo.InvariantCulture),
-        //        htttoan = apiResp.ApiHinhThucThanhToanCode ?? apiResp.ApiHinhThucThanhToanText,
-        //        thtttoan = apiResp.ApiHinhThucThanhToanCode ?? apiResp.ApiHinhThucThanhToanText,
-        //        tgtcthue = apiResp.ApiTongTienChuaThue,
-        //        tgtthue = apiResp.ApiTongTienThue,
-        //        ttcktmai = apiResp.ApiTongTienChietKhauTM,
-        //        tgtttbso = apiResp.ApiTongTienThanhToan,
-        //        tgtttbchu = apiResp.ApiTongTienThanhToanBangChu,
-        //        tthai = apiResp.ApiTrangThaiHD_Code,
-        //        ttxly = apiResp.ApiTinhTrangXuLy_Code,
-        //        LastDownloadedDetailDate = DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture),
-
-        //        // Các trường còn lại từ SqliteInvoiceHeader cần được ánh xạ từ apiResp nếu có
-        //        // Ví dụ, nếu apiResp có các trường tương ứng:
-        //        cqt = (string)apiResp.GetType().GetProperty("cqt")?.GetValue(apiResp), // Lấy động nếu tên khác
-        //        hdon = (string)apiResp.GetType().GetProperty("hdon")?.GetValue(apiResp),
-        //        // ... và cứ thế cho tất cả các trường khác bạn muốn lưu ...
-        //        // Nếu một trường trong apiResp là một object hoặc array phức tạp (ví dụ cttkhac),
-        //        // bạn có thể serialize nó thành JSON string ở đây:
-        //        // cttkhac = apiResp.cttkhac != null ? JsonConvert.SerializeObject(apiResp.cttkhac) : null,
-
-        //    };
-        //    // Gán các trường từ JSON response vào header.
-        //    // Ví dụ: header.pban = apiResp.pban; (nếu bạn thêm pban vào InvoiceDetailApiResponse)
-        //    // Cần đảm bảo InvoiceDetailApiResponse có đủ các trường bạn muốn lấy từ JSON gốc.
-        //    // Hoặc bạn parse trực tiếp từ JObject nếu không muốn thêm hết vào class C#.
-        //    return header;
-        //}
-
-        //private SqliteInvoiceItem MapRawItemToSqliteItem(InvoiceItemRawData rawItem, string invoiceHeaderId)
-        //{
-        //    return new SqliteInvoiceItem
-        //    {
-        //        idhdon = invoiceHeaderId,
-        //        id = Guid.NewGuid().ToString(), // Hoặc lấy từ rawItem.ItemIdRaw nếu API cung cấp
-        //        ten = rawItem.TenHHDVRaw,
-        //        dvtinh = rawItem.DonViTinhRaw,
-        //        sluong = rawItem.SoLuongRaw,
-        //        dgia = rawItem.DonGiaRaw,
-        //        stckhau = rawItem.SoTienChietKhauRaw,
-        //        ltsuat = rawItem.LoaiThueSuatRaw,
-        //        tsuat = rawItem.ThueSuatValueRaw,
-        //        thtien = rawItem.ThanhTienChuaThueRaw,
-        //        tthue = rawItem.TienThueRaw,
-        //        sxep = rawItem.SoThuTuDongRaw,
-        //        // ttkhac = rawItem.ThongTinKhacChiTiet != null ? JsonConvert.SerializeObject(rawItem.ThongTinKhacChiTiet) : null,
-        //        // ... các trường khác ...
-        //    };
-        //}
-
+        
         // Các hàm Build...Command và AddParameters... cần được viết đầy đủ
         private string BuildInsertInvoiceSummaryCommand(string tableName)
         {
             var properties = typeof(InvoiceSummaryData).GetProperties().Select(p => p.Name);
 
-            Debug.WriteLine("=== Properties từ InvoiceSummaryData ===");
-            foreach (var prop in properties)
-            {
-                Debug.WriteLine($"Property: {prop}");
-            }
+            //Debug.WriteLine("=== Properties từ InvoiceSummaryData ===");
+            //foreach (var prop in properties)
+            //{
+            //    Debug.WriteLine($"Property: {prop}");
+            //}
 
             string columns = string.Join(", ", properties);
             string parameters = string.Join(", ", properties.Select(p => "@" + p));
 
-            Debug.WriteLine($"=== SQL Command ===");
-            Debug.WriteLine($"Columns: {columns}");
-            Debug.WriteLine($"Parameters: {parameters}");
+            //Debug.WriteLine($"=== SQL Command ===");
+            //Debug.WriteLine($"Columns: {columns}");
+            //Debug.WriteLine($"Parameters: {parameters}");
 
             return $"INSERT INTO {tableName} ({columns}) VALUES ({parameters});";
         }
@@ -607,11 +539,21 @@ namespace HoaDonDienTu.Services
             return $"UPDATE {tableName} SET {setClauses} WHERE id = @id;";
         }
 
-        private string BuildInsertInvoiceItemCommand(string tableName)
+        private string BuildInsertInvoiceDetailCommand(string tableName)
         {
-            var properties = typeof(SqliteInvoiceItem).GetProperties().Select(p => p.Name);
-            string columns = string.Join(", ", properties);
-            string parameters = string.Join(", ", properties.Select(p => "@" + p));
+             var allProperties = typeof(InvoiceDetailData).GetProperties().Select(p => p.Name).ToHashSet();
+            var desiredColumns = new[] { 
+                "idhdon", "id", "dgia", "dvtinh", "ltsuat", "sluong",
+                "stbchu", "stckhau", "stt", "tchat", "ten", "thtcthue", 
+                "thtien", "tlckhau", "tsuat", "tthue","sxep", "ttkhac", 
+                "dvtte", "tgia", "tthhdtrung"
+            };
+
+            // Chỉ lấy những cột vừa mong muốn vừa tồn tại trong class
+            var selectedColumns = desiredColumns.Where(col => allProperties.Contains(col));
+
+            string columns = string.Join(", ", selectedColumns);
+            string parameters = string.Join(", ", selectedColumns.Select(p => "@" + p));
             return $"INSERT INTO {tableName} ({columns}) VALUES ({parameters});";
         }
 
@@ -639,14 +581,21 @@ namespace HoaDonDienTu.Services
             }
         }
 
-
-        private void AddParametersToCommand(SqliteCommand command, SqliteInvoiceItem item)
+        private void AddDetailParametersToCommand(SqliteCommand command, HangHoaDichVuRawData detailData, bool isUpdate)
         {
-            foreach (var prop in typeof(SqliteInvoiceItem).GetProperties())
+            foreach (var prop in typeof(InvoiceSummaryData).GetProperties())
             {
-                if (command.CommandText.Contains($"@{prop.Name}"))
+                string paramName = $"@{prop.Name}";
+                if (command.CommandText.Contains(paramName))
                 {
-                    command.Parameters.AddWithValue($"@{prop.Name}", prop.GetValue(item) ?? DBNull.Value);
+                    object value = prop.GetValue(detailData);
+
+                    if (value != null && prop.PropertyType == typeof(object))
+                    {
+                        value = value.ToString();
+                    }
+
+                    command.Parameters.AddWithValue(paramName, value ?? DBNull.Value);
                 }
             }
         }

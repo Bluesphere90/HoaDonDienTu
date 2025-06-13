@@ -765,7 +765,15 @@ namespace HoaDonDienTu
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync();
-                        var apiResponseData = System.Text.Json.JsonSerializer.Deserialize<InvoiceDetailData>(content);
+                        var options = new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true,
+                            WriteIndented = true,
+                            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                            NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString, // Allow số dạng string
+                            UnknownTypeHandling = JsonUnknownTypeHandling.JsonNode // Ignore unknown fields
+                        };
+                        var apiResponseData = System.Text.Json.JsonSerializer.Deserialize<InvoiceDetailData>(content, options);
 
                         if (apiResponseData != null)
                         {
@@ -777,6 +785,30 @@ namespace HoaDonDienTu
                             {
                                 foreach (var rawItem in apiResponseData.hdhhdvu)
                                 {
+                                    // Lưu vào Database
+                                    try
+                                    {
+                                        // Kiểm tra xem chi tiết đã tồn tại trong database chưa
+                                        bool detailExists = databaseService.InvoiceDetailExists(rawItem.id, isMuaVao);
+
+                                        if (detailExists) 
+                                        { 
+                                            // Tạo method trong databaseService nhằm update lại ngày tải cuối cùng của hóa đơn
+                                        }
+                                        else
+                                        {
+                                            // Ghi vào database
+                                            databaseService.SaveInvoiceDetailData(rawItem, isMuaVao);
+                                        }
+                                    }
+                                    catch (Exception dbEx)
+                                    {
+
+                                        throw;
+                                    }
+                                    
+                                    
+                                    
                                     var displayItem = new InvoiceDisplayItem
                                     {
                                         LoaiHoaDon = apiResponseData.tlhdon,
@@ -801,7 +833,7 @@ namespace HoaDonDienTu
                                         SoLuong = rawItem.sluong,
                                         DonGia = rawItem.dgia,
                                         SoTienChietKhau = rawItem.tlckhau,
-                                        LoaiThueSuat = rawItem.tsuat,
+                                        LoaiThueSuat = rawItem.ltsuat,
                                         ThanhTienChuaThue = rawItem.thtcthue,
                                         TienThue = rawItem.tthue,
                                         
