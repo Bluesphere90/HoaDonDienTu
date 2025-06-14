@@ -695,7 +695,7 @@ namespace HoaDonDienTu
         }
         private async Task GetInvoiceDetailsAsync(InvoiceIdentifier invoiceIdentity, bool isBackgroundMode = false)
         {
-            int maxRetries = 5;
+            int maxRetries = 7;
             int currentRetry = 0;
             int baseDelayMillisecondsForRetry = isBackgroundMode ? 4000 : 1000; // Thời gian chờ ban đầu cho retry, dài hơn nếu là background
 
@@ -785,17 +785,15 @@ namespace HoaDonDienTu
                             {
                                 foreach (var rawItem in apiResponseData.hdhhdvu)
                                 {
+                                    Debug.WriteLine($"Debug Kiểm tra rawItem.idhdon: {rawItem.idhdon}.");
+                                    
                                     // Lưu vào Database
                                     try
                                     {
                                         // Kiểm tra xem chi tiết đã tồn tại trong database chưa
                                         bool detailExists = databaseService.InvoiceDetailExists(rawItem.id, isMuaVao);
 
-                                        if (detailExists) 
-                                        { 
-                                            // Tạo method trong databaseService nhằm update lại ngày tải cuối cùng của hóa đơn
-                                        }
-                                        else
+                                        if (!detailExists) 
                                         {
                                             // Ghi vào database
                                             databaseService.SaveInvoiceDetailData(rawItem, isMuaVao);

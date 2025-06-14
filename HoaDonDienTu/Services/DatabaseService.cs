@@ -541,19 +541,21 @@ namespace HoaDonDienTu.Services
 
         private string BuildInsertInvoiceDetailCommand(string tableName)
         {
-             var allProperties = typeof(InvoiceDetailData).GetProperties().Select(p => p.Name).ToHashSet();
-            var desiredColumns = new[] { 
-                "idhdon", "id", "dgia", "dvtinh", "ltsuat", "sluong",
-                "stbchu", "stckhau", "stt", "tchat", "ten", "thtcthue", 
-                "thtien", "tlckhau", "tsuat", "tthue","sxep", "ttkhac", 
-                "dvtte", "tgia", "tthhdtrung"
-            };
+            var properties = typeof(HangHoaDichVuRawData).GetProperties().Select(p => p.Name);
 
-            // Chỉ lấy những cột vừa mong muốn vừa tồn tại trong class
-            var selectedColumns = desiredColumns.Where(col => allProperties.Contains(col));
+            //Debug.WriteLine("=== Properties từ InvoiceSummaryData ===");
+            //foreach (var prop in properties)
+            //{
+            //    Debug.WriteLine($"Property: {prop}");
+            //}
 
-            string columns = string.Join(", ", selectedColumns);
-            string parameters = string.Join(", ", selectedColumns.Select(p => "@" + p));
+            string columns = string.Join(", ", properties);
+            string parameters = string.Join(", ", properties.Select(p => "@" + p));
+
+            //Debug.WriteLine($"=== SQL Command ===");
+            //Debug.WriteLine($"Columns: {columns}");
+            //Debug.WriteLine($"Parameters: {parameters}");
+
             return $"INSERT INTO {tableName} ({columns}) VALUES ({parameters});";
         }
 
@@ -583,7 +585,7 @@ namespace HoaDonDienTu.Services
 
         private void AddDetailParametersToCommand(SqliteCommand command, HangHoaDichVuRawData detailData, bool isUpdate)
         {
-            foreach (var prop in typeof(InvoiceSummaryData).GetProperties())
+            foreach (var prop in typeof(HangHoaDichVuRawData).GetProperties())
             {
                 string paramName = $"@{prop.Name}";
                 if (command.CommandText.Contains(paramName))
