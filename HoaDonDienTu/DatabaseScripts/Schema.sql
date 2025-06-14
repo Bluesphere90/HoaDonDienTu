@@ -165,7 +165,16 @@ CREATE TABLE IF NOT EXISTS InputInvDetails (
     ttkhac     TEXT,
     dvtte      TEXT,
     tgia       REAL,
-    tthhdtrung TEXT
+    tthhdtrung TEXT,
+	PredictedHachToan    TEXT,
+    HachToanProbability  REAL,
+    PredictedMaHangHoa   TEXT,
+    MaHangHoaProbability REAL,
+    IsOutlierHachToan    INTEGER,
+    IsOutlierMaHangHoa   INTEGER,
+    PredictedAt          TEXT,
+    PredictionMethod     TEXT,
+    PredictionError      TEXT
 );
 
 CREATE INDEX IF NOT EXISTS IDX_InputInv_Lookup ON InputInv (khmshdon, khhdon, shdon);
@@ -331,7 +340,16 @@ CREATE TABLE IF NOT EXISTS OutputInvDetails (
     ttkhac     TEXT,
     dvtte      TEXT,
     tgia       REAL,
-    tthhdtrung TEXT
+    tthhdtrung TEXT,
+	PredictedHachToan    TEXT,
+    HachToanProbability  REAL,
+    PredictedMaHangHoa   TEXT,
+    MaHangHoaProbability REAL,
+    IsOutlierHachToan    INTEGER,
+    IsOutlierMaHangHoa   INTEGER,
+    PredictedAt          TEXT,
+    PredictionMethod     TEXT,
+    PredictionError      TEXT
 );
 
 CREATE INDEX IF NOT EXISTS IDX_OutputInv_Lookup ON OutputInv (khmshdon, khhdon, shdon);

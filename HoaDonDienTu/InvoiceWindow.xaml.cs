@@ -832,7 +832,7 @@ namespace HoaDonDienTu
                                         DonGia = rawItem.dgia,
                                         SoTienChietKhau = rawItem.tlckhau,
                                         LoaiThueSuat = rawItem.ltsuat,
-                                        ThanhTienChuaThue = rawItem.thtcthue,
+                                        ThanhTienChuaThue = rawItem.thtien,
                                         TienThue = rawItem.tthue,
                                         
                                         
